@@ -1,3 +1,33 @@
+// File: src/components/FacultyDashboard.jsx
+import React, { useEffect, useState } from 'react';
+
+const FacultyDashboard = () => {
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/faculty/students')
+      .then(res => res.json())
+      .then(setStudents);
+  }, []);
+
+  return (
+    <div>
+      <h2>Faculty Dashboard</h2>
+      {students.map(s => (
+        <div key={s.did} style={{ border: '1px solid #ccc', marginBottom: '10px' }}>
+          <p>DID: {s.did}</p>
+          <p>Course: {s.course}</p>
+          <p>Semester: {s.semester}</p>
+          <p>Attendance: {s.attendance}</p>
+          <p>Grade: {s.grade}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default FacultyDashboard;
+/*
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -51,3 +81,5 @@ const FacultyDashboard = () => {
 };
 
 export default FacultyDashboard;
+
+*/

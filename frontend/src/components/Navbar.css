@@ -1,0 +1,32 @@
+/* File: src/components/Navbar.css */
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: #333;
+    color: #fff;
+  }
+  
+  .navbar-title {
+    font-size: 20px;
+    margin: 0;
+  }
+  
+  .navbar-links {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .navbar-links a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s ease;
+  }
+  
+  .navbar-links a:hover {
+    color: #ffcc00;
+  }
+  

@@ -1,14 +1,12 @@
+// File: src/pages/Home.jsx
 import React from 'react';
-import Navbar from '../components/Navbar';
 
-const Home = () => {
-  return (
-    <div>
-      <Navbar />
-      <h1>Welcome to Blockchain-Based Degree Issuance System</h1>
-    </div>
-  );
-};
+const Home = () => (
+  <div>
+    <h1>Welcome to the Digital Degree Issuance System</h1>
+    <p>Use the navbar to access Student, Faculty, or Admin dashboards.</p>
+  </div>
+);
 
 export default Home;
 
