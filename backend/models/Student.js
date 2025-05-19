@@ -10,7 +10,22 @@ const gradeSchema = new mongoose.Schema({
 // Attendance Subdocument Schema
 const attendanceSchema = new mongoose.Schema({
   date: { type: Date, required: true },
-  status: { type: String, enum: ['present', 'absent', 'leave'], required: true }
+  status: {
+    type: String,
+    enum: ['present', 'absent', 'leave'],
+    required: true
+  }
+});
+
+// ✅ Fee Status Subdocument Schema (semester-wise)
+const feeStatusSchema = new mongoose.Schema({
+  semester: { type: Number, required: true },
+  status: {
+    type: String,
+    enum: ['unpaid', 'paid', 'partial'],
+    default: 'unpaid',
+    required: true
+  }
 });
 
 // Main Student Schema
@@ -25,7 +40,8 @@ const studentSchema = new mongoose.Schema({
   degree: { type: String, required: true },
   batch: { type: String, required: true },
 
-  feeStatus: { type: String, enum: ['unpaid', 'paid', 'partial'], default: 'unpaid' },
+  // ✅ Semester-wise Fee Tracking
+  feeStatus: [feeStatusSchema],
 
   grades: [gradeSchema],
   attendance: [attendanceSchema]

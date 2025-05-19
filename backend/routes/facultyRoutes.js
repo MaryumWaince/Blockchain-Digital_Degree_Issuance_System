@@ -1,35 +1,37 @@
-// backend/routes/facultyRoutes.js
-
+// ✅ File: routes/facultyRoutes.js
 const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
 
-// Get all students with their DID, courses, semester, and attendance
-router.get('/students', async (req, res) => {
+// Mark Attendance
+router.post('/attendance/:did', async (req, res) => {
+  const { date, status } = req.body;
   try {
-    const students = await Student.find({}, 'did courses semester attendance');
-    res.json(students);
+    const student = await Student.findOne({ did: req.params.did });
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+
+    student.attendance.push({ date, status });
+    await student.save();
+
+    res.status(200).json({ message: 'Attendance marked successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching students', error: err.message });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
-// Assign grades to a student
-router.post('/assign-grade', async (req, res) => {
-  const { did, course, grade } = req.body;
-
+// Submit Grade
+router.post('/grade/:did', async (req, res) => {
+  const { course, semester, grade } = req.body;
   try {
-    const student = await Student.findOne({ did });
+    const student = await Student.findOne({ did: req.params.did });
     if (!student) return res.status(404).json({ message: 'Student not found' });
 
-    const existing = student.grades.find(g => g.course === course);
-    if (existing) existing.grade = grade;
-    else student.grades.push({ course, grade });
-
+    student.grades.push({ course, semester, grade });
     await student.save();
-    res.json({ message: 'Grade updated successfully' });
+
+    res.status(200).json({ message: 'Grade submitted successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Error assigning grade', error: err.message });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 

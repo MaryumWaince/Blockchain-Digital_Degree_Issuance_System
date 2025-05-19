@@ -12,6 +12,13 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const gradeRoutes = require('./routes/gradeRoutes');
 const facultyRoutes = require('./routes/facultyRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes'); // ✅ Add this near the top
+
+const leaveRoutes = require('./routes/leaveRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
+
+
+
 
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -31,11 +38,17 @@ app.use(express.json());
 app.use('/api/students', studentRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/degrees', degreeRoutes);
+app.use('/api/degree', degreeRoutes); // ✅ Fix applied here
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/grades', gradeRoutes);
 app.use('/api/faculty', facultyRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/schedule', scheduleRoutes);
+
+
+
 
 // ✅ Global Error Handler
 app.use(errorHandler);

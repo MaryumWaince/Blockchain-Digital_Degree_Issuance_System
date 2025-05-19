@@ -61,10 +61,16 @@ const Register = () => {
             <input name="contact" placeholder="Contact" onChange={handleChange} required />
             <select name="degree" onChange={handleChange} required>
               <option value="">Select Degree</option>
-              <option value="BSIT">BSIT</option>
-              <option value="BSSE">BSSE</option>
-              <option value="BSCS">BSCS</option>
-              <option value="LLB">LLB</option>
+              <option value="BSCS">BS Computer Science</option>
+              <option value="BSSE">BS Software Engineering</option>
+              <option value="BSIT">BS Information Technology</option>
+              <option value="BSDS">BS Data Science</option>
+              <option value="BSIS">BS Information Security</option>
+              <option value="BSAI">BS Artificial Intelligence</option>
+              <option value="BSE">BS Electronics</option>
+              <option value="BSCN">BS Cybersecurity</option>
+              <option value="BSEM">BS Environmental Management</option>
+              <option value="BSMath">BS Mathematics</option>
             </select>
             <input name="batch" placeholder="Batch No." onChange={handleChange} required />
           </>
