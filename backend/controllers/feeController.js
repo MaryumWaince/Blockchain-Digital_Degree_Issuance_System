@@ -1,7 +1,7 @@
 const Fee = require('../models/Fee');
 const Student = require('../models/Student');
 
-// ✅ POST /api/fees/pay
+// POST /api/fees/pay
 exports.payFee = async (req, res) => {
   const { studentDID, semester, degree, status } = req.body;
 
@@ -36,6 +36,8 @@ exports.payFee = async (req, res) => {
       student.feeStatus.push({ semester: semesterNum, status });
     }
 
+    student.feeStatus = student.feeStatus.filter(f => typeof f.semester === 'number' && f.semester > 0);
+
     await student.save();
 
     res.status(200).json({
@@ -47,43 +49,41 @@ exports.payFee = async (req, res) => {
   }
 };
 
-// ✅ GET /api/fees/filter
-exports.filterFees = async (req, res) => {
-  const { did, semester, degree } = req.query;
-  const query = {};
-
-  if (did) query.studentDID = did;
-  if (semester) {
-    const semesterNum = Number(semester);
-    if (isNaN(semesterNum)) return res.status(400).json({ message: 'Semester must be a number' });
-    query.semester = semesterNum;
-  }
-  if (degree) query.degree = degree;
+// GET /api/fees/:studentDID  - Get fee payments by student DID
+exports.getFeePayments = async (req, res) => {
+  const { studentDID } = req.params;
 
   try {
-    const filtered = await Fee.find(query);
-    res.status(200).json(filtered);
+    const fees = await Fee.find({ studentDID });
+    if (!fees.length) {
+      return res.status(404).json({ message: 'No fee records found for this student DID' });
+    }
+    res.status(200).json(fees);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
-// ✅ GET /api/fees/:studentDID
-exports.getFeePayments = async (req, res) => {
-  const { studentDID } = req.params;
+// GET /api/fees/filter - Filter fees by query params (e.g. semester, degree, status)
+exports.filterFees = async (req, res) => {
+  const { studentDID, semester, degree, status } = req.query;
 
-  if (!studentDID) {
-    return res.status(400).json({ message: 'Student DID is required' });
-  }
+  const filter = {};
+  if (studentDID) filter.studentDID = studentDID;
+  if (semester) filter.semester = Number(semester);
+  if (degree) filter.degree = degree;
+  if (status) filter.status = status;
 
   try {
-    const fees = await Fee.find({ studentDID });
+    const fees = await Fee.find(filter);
+    if (!fees.length) {
+      return res.status(404).json({ message: 'No fee records found matching the criteria' });
+    }
     res.status(200).json(fees);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch fee records', error: err.message });
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
 
 
 /*

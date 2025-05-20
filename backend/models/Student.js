@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 // Grade Subdocument Schema
 const gradeSchema = new mongoose.Schema({
-  course: { type: String, required: true },
+  course: { type: Number, required: true },
   semester: { type: String, required: true },
   grade: { type: String, required: true }
 });

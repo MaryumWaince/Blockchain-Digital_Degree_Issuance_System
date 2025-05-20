@@ -16,6 +16,8 @@ const userRoutes = require('./routes/userRoutes'); // ✅ Add this near the top
 
 const leaveRoutes = require('./routes/leaveRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
+const reenrollmentRoutes = require('./routes/reenrollmentRoutes');
+
 
 
 
@@ -46,7 +48,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/schedule', scheduleRoutes);
-
+app.use('/api/reenrollment', reenrollmentRoutes);
 
 
 
