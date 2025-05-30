@@ -4,9 +4,9 @@ const Student = require('../models/Student');
 
 const router = express.Router();
 
-// ✅ Student Registration (Raw Private Key + DID)
+// ✅ Register a new Student (DID + PrivateKey)
 router.post('/register', async (req, res) => {
-  const { name, cnic, email, contact, degree, batch } = req.body;
+  const { name, cnic, email, contact, degree, batch, fingerprintHash } = req.body;
 
   if (!name || !cnic || !email || !contact || !degree || !batch) {
     return res.status(400).json({ message: 'Missing required fields' });
@@ -17,24 +17,28 @@ router.post('/register', async (req, res) => {
     const rawPrivateKey = crypto.randomBytes(32).toString('hex');
     const did = crypto.createHash('sha256').update(rawPrivateKey).digest('hex');
 
-    // 2. Save raw private key (not hashed)
-    const student = new Student({
+    // 2. Create new student document
+    const newStudent = new Student({
       did,
       privateKey: rawPrivateKey,
       name,
+      cnic,
       email,
       contact,
-      cnic,
       degree,
       batch,
-      feeStatus: 'unpaid',
+      fingerprintHash,
+      feeStatus: [],
       grades: [],
-      attendance: []
+      attendance: [],
+      reenrollmentRequests: [],
+      gpaBySemester: {},
+      cgpa: 0
     });
 
-    await student.save();
+    await newStudent.save();
 
-    // 3. Return DID and private key to frontend
+    // 3. Return only public info
     res.status(201).json({
       message: 'Student registered successfully',
       did,
@@ -45,7 +49,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ✅ Student Login (Match raw private key)
+// ✅ Login Student with DID + Private Key
 router.post('/login', async (req, res) => {
   const { did, privateKey } = req.body;
 
@@ -68,7 +72,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ✅ Get Student Profile by DID
+// ✅ Get Full Student Profile by DID (without privateKey)
 router.get('/:did', async (req, res) => {
   try {
     const student = await Student.findOne({ did: req.params.did });
@@ -76,9 +80,36 @@ router.get('/:did', async (req, res) => {
       return res.status(404).json({ message: 'Student not found' });
     }
 
-    // Remove private key before sending response
-    const { privateKey, ...safeStudent } = student.toObject();
-    res.status(200).json(safeStudent);
+    const { privateKey, ...publicData } = student.toObject();
+    res.status(200).json(publicData);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// ✅ Submit Reenrollment Request
+router.post('/:did/reenrollment', async (req, res) => {
+  const { semester, courses } = req.body;
+  const { did } = req.params;
+
+  if (!semester || !Array.isArray(courses) || courses.length === 0) {
+    return res.status(400).json({ message: 'Invalid semester or course list' });
+  }
+
+  try {
+    const student = await Student.findOne({ did });
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Add new reenrollment request
+    student.reenrollmentRequests.push({
+      semester,
+      courses
+    });
+
+    await student.save();
+    res.status(200).json({ message: 'Reenrollment request submitted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

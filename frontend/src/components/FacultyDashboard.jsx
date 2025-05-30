@@ -1,24 +1,16 @@
+// File: src/pages/FacultyDashboard.jsx
 import React, { useEffect, useState } from 'react';
-import FacultyScheduleChange from './FacultyScheduleChange';
+import FacultyScheduleChange from '../components/FacultyScheduleChange';
 import axios from 'axios';
+import '../styles/FacultyDashboard.css';
 
 const FacultyDashboard = () => {
+  const [activeTab, setActiveTab] = useState('grades');
   const [scheduleRequests, setScheduleRequests] = useState([]);
   const [courseAttendance, setCourseAttendance] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
-
-  const [gradeInput, setGradeInput] = useState({
-    studentDID: '',
-    courseName: '',
-    semester: '',
-    marks: ''
-  });
+  const [gradeInput, setGradeInput] = useState({ studentDID: '', courseName: '', semester: '', marks: '' });
   const [gradeStatus, setGradeStatus] = useState('');
-
-  const [gpaInputDID, setGpaInputDID] = useState('');
-  const [gpaData, setGpaData] = useState(null);
-  const [gpaStatus, setGpaStatus] = useState('');
-
   const [reEnrollments, setReEnrollments] = useState([]);
   const [reEnrollGradeInput, setReEnrollGradeInput] = useState({});
   const [reEnrollGradeStatus, setReEnrollGradeStatus] = useState('');
@@ -27,42 +19,25 @@ const FacultyDashboard = () => {
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        if (facultyName) {
-          const res = await fetch(`${backendUrl}/api/schedule/faculty/${facultyName}`);
-          const requestData = await res.json();
-          setScheduleRequests(requestData);
-        }
-      } catch (err) {
-        console.error('Error fetching schedule requests:', err);
-      }
-    };
-    fetchRequests();
-  }, [facultyName, backendUrl]);
+    if (!facultyName) return;
+    fetch(`${backendUrl}/api/schedule/faculty/${facultyName}`)
+      .then(res => res.json())
+      .then(setScheduleRequests)
+      .catch(err => console.error('Schedule fetch error:', err));
+  }, [facultyName]);
 
   useEffect(() => {
-    const fetchReEnrollments = async () => {
-      try {
-        if (facultyName) {
-          const res = await fetch(`${backendUrl}/api/reenrollment/faculty/${facultyName}/Approved`);
-          const data = await res.json();
-          setReEnrollments(data);
-
-          const initialInputs = {};
-          data.forEach(req => {
-            req.courses.forEach(course => {
-              initialInputs[`${req.studentDID}_${course.courseName}`] = '';
-            });
-          });
-          setReEnrollGradeInput(initialInputs);
-        }
-      } catch (err) {
-        console.error('Error fetching re-enrollment requests:', err);
-      }
-    };
-    fetchReEnrollments();
-  }, [facultyName, backendUrl]);
+    if (!facultyName) return;
+    fetch(`${backendUrl}/api/reenrollment/faculty/${facultyName}/Approved`)
+      .then(res => res.json())
+      .then(data => {
+        setReEnrollments(data);
+        const inputs = {};
+        data.forEach(r => r.courses.forEach(c => { inputs[`${r.studentDID}_${c.courseName}`] = ''; }));
+        setReEnrollGradeInput(inputs);
+      })
+      .catch(err => console.error('Reenrollment fetch error:', err));
+  }, [facultyName]);
 
   const fetchCourseAttendance = async () => {
     if (!selectedCourse) return;
@@ -70,16 +45,13 @@ const FacultyDashboard = () => {
       const res = await axios.get(`${backendUrl}/api/attendance/course/${selectedCourse}`);
       setCourseAttendance(res.data);
     } catch (err) {
-      console.error('Error fetching attendance:', err);
+      console.error('Attendance fetch error:', err);
     }
   };
 
   const submitGrade = async () => {
     const { studentDID, courseName, semester, marks } = gradeInput;
-    if (!studentDID || !courseName || !semester || !marks) {
-      setGradeStatus('Please fill all fields before submitting.');
-      return;
-    }
+    if (!studentDID || !courseName || !semester || !marks) return setGradeStatus('All fields required.');
 
     try {
       const res = await axios.post(`${backendUrl}/api/grades/submit`, {
@@ -88,21 +60,17 @@ const FacultyDashboard = () => {
         semester: Number(semester),
         obtainedMarks: Number(marks)
       });
-      setGradeStatus(res.data.message || 'Grade submitted');
+      setGradeStatus(res.data.message || 'Grade submitted.');
       setGradeInput({ studentDID: '', courseName: '', semester: '', marks: '' });
     } catch (err) {
-      setGradeStatus('Failed to submit grade');
-      console.error('Grade submission error:', err.response?.data || err.message);
+      setGradeStatus('Error submitting grade.');
     }
   };
 
   const submitReEnrollGrade = async (studentDID, courseName, semester) => {
     const key = `${studentDID}_${courseName}`;
     const marks = reEnrollGradeInput[key];
-    if (!marks) {
-      setReEnrollGradeStatus('Please enter marks before submitting.');
-      return;
-    }
+    if (!marks) return setReEnrollGradeStatus('Enter marks.');
 
     try {
       await axios.post(`${backendUrl}/api/grades/submit`, {
@@ -114,189 +82,123 @@ const FacultyDashboard = () => {
       setReEnrollGradeStatus(`Grade submitted for ${studentDID} - ${courseName}`);
       setReEnrollGradeInput(prev => ({ ...prev, [key]: '' }));
     } catch (err) {
-      setReEnrollGradeStatus('Failed to submit grade');
-      console.error('Re-enrollment grade submission error:', err.response?.data || err.message);
-    }
-  };
-
-  const fetchGpaCgpa = async () => {
-    if (!gpaInputDID) {
-      setGpaStatus('Enter student DID');
-      return;
-    }
-
-    try {
-      const res = await axios.get(`${backendUrl}/api/grades/gpa/${gpaInputDID}`);
-      setGpaData(res.data);
-      setGpaStatus('');
-    } catch (err) {
-      console.error('Failed to fetch GPA/CGPA');
-      setGpaStatus('Failed to fetch GPA/CGPA');
+      setReEnrollGradeStatus('Error submitting re-enrollment grade.');
     }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Faculty Dashboard</h2>
+    <div className="faculty-dashboard">
+      <h1 className="dashboard-title">👨‍🏫 Faculty Dashboard</h1>
 
-      {/* Grade Assignment */}
-      <section>
-        <h3>📚 Grade Assignment</h3>
-        <input
-          placeholder="Student DID"
-          value={gradeInput.studentDID}
-          onChange={e => setGradeInput({ ...gradeInput, studentDID: e.target.value })}
-        />
-        <input
-          placeholder="Course Name"
-          value={gradeInput.courseName}
-          onChange={e => setGradeInput({ ...gradeInput, courseName: e.target.value })}
-        />
-        <input
-          placeholder="Semester"
-          value={gradeInput.semester}
-          onChange={e => setGradeInput({ ...gradeInput, semester: e.target.value })}
-        />
-        <input
-          placeholder="Obtained Marks"
-          type="number"
-          value={gradeInput.marks}
-          onChange={e => setGradeInput({ ...gradeInput, marks: e.target.value })}
-        />
-        <button onClick={submitGrade}>Assign Grade</button>
-        {gradeStatus && <p>{gradeStatus}</p>}
-      </section>
+      <div className="tab-buttons">
+        <button className={activeTab === 'grades' ? 'active' : ''} onClick={() => setActiveTab('grades')}>📚 Assign Grades</button>
+        <button className={activeTab === 'schedule' ? 'active' : ''} onClick={() => setActiveTab('schedule')}>📅 Schedule Requests</button>
+        <button className={activeTab === 'attendance' ? 'active' : ''} onClick={() => setActiveTab('attendance')}>🧾 View Attendance</button>
+        <button className={activeTab === 'reenroll' ? 'active' : ''} onClick={() => setActiveTab('reenroll')}>🔁 Re-Enrollment Grades</button>
+      </div>
 
-      <hr />
+      {activeTab === 'grades' && (
+        <section className="section-card">
+          <h2>📚 Assign Grades</h2>
+          <div className="form-inline">
+            {['studentDID', 'courseName', 'semester', 'marks'].map(field => (
+              <input
+                key={field}
+                placeholder={field}
+                value={gradeInput[field]}
+                onChange={e => setGradeInput(prev => ({ ...prev, [field]: e.target.value }))}
+              />
+            ))}
+            <button onClick={submitGrade}>Submit</button>
+          </div>
+          {gradeStatus && <p className="status-message">{gradeStatus}</p>}
+        </section>
+      )}
 
-      {/* Schedule Change Section */}
-      <section>
-        <h3>📅 Request Class Schedule Change</h3>
-        <FacultyScheduleChange />
-      </section>
+      {activeTab === 'schedule' && (
+        <section className="section-card">
+          <h2>📅 Schedule Change</h2>
+          <FacultyScheduleChange />
+          <h3 style={{ marginTop: '20px' }}>📖 My Requests Status</h3>
+          <div className="table-container">
+            <table className="status-table">
+              <thead>
+                <tr>
+                  <th>Class</th>
+                  <th>Old Date</th>
+                  <th>New Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scheduleRequests.length === 0 ? (
+                  <tr><td colSpan="4">No requests.</td></tr>
+                ) : (
+                  scheduleRequests.map(req => (
+                    <tr key={req._id}>
+                      <td>{req.classId}</td>
+                      <td>{new Date(req.oldDate).toLocaleDateString()}</td>
+                      <td>{new Date(req.newDate).toLocaleDateString()}</td>
+                      <td>{req.approved ? '✅ Approved' : '⏳ Pending'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
-      <section>
-        <h3>🕒 My Schedule Change Requests</h3>
-        {scheduleRequests.length === 0 ? (
-          <p>No requests submitted yet.</p>
-        ) : (
+      {activeTab === 'attendance' && (
+        <section className="section-card">
+          <h2>🧾 View Attendance</h2>
+          <div className="attendance-inputs">
+            <input
+              placeholder="Enter Course"
+              value={selectedCourse}
+              onChange={e => setSelectedCourse(e.target.value)}
+            />
+            <button onClick={fetchCourseAttendance}>Fetch</button>
+          </div>
           <ul>
-            {scheduleRequests.map(req => (
-              <li key={req._id}>
-                Class: {req.classId} — {new Date(req.oldDate).toLocaleDateString()} → {new Date(req.newDate).toLocaleDateString()} — {req.approved ? '✅ Approved' : '⏳ Pending'}
-              </li>
+            {courseAttendance.map((r, i) => (
+              <li key={i}>Date: {new Date(r.date).toLocaleDateString()} | DID: {r.did} | Status: {r.status}</li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
 
-      <hr />
-
-      {/* Course Attendance Section */}
-      <section>
-        <h3>🧑‍🏫 View Course Attendance</h3>
-        <input
-          placeholder="Enter Course"
-          value={selectedCourse}
-          onChange={e => setSelectedCourse(e.target.value)}
-        />
-        <button onClick={fetchCourseAttendance}>Fetch Attendance</button>
-        {courseAttendance.length > 0 && (
-          <ul>
-            {courseAttendance.map((record, idx) => (
-              <li key={idx}>
-                Date: {new Date(record.date).toLocaleDateString()} | DID: {record.did} | Course: {record.course} | Status: {record.status}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <hr />
-
-      {/* ✅ Approved Re-Enrollment Requests */}
-      <section>
-        <h2>🔁 Approved Re-Enrollment Requests</h2>
-        {reEnrollments.filter(req => req.status === 'Approved').length === 0 ? (
-          <p>No approved re-enrollment requests.</p>
-        ) : (
-          <ul>
-            {reEnrollments
-              .filter(req => req.status === 'Approved')
-              .map(req => (
-                <li key={req._id}>
-                  Semester: {req.semester} — Courses: {req.courses.map(course => course.courseName).join(', ')}
-                </li>
-              ))}
-          </ul>
-        )}
-      </section>
-
-      <hr />
-
-      {/* Re-enrollment Grades */}
-      <section>
-        <h3>📝 Submit Grades for Approved Re-Enrollment Requests</h3>
-        {reEnrollments.length === 0 ? (
-          <p>No approved re-enrollment requests.</p>
-        ) : (
-          reEnrollments.map(request => (
-            <div key={request._id} style={{ border: '1px solid #ccc', marginBottom: '10px', padding: '10px' }}>
-              <p><strong>Student DID:</strong> {request.studentDID}</p>
-              <p><strong>Semester:</strong> {request.semester}</p>
-              <p><strong>Courses:</strong> {request.courses.map(c => c.courseName).join(', ')}</p>
-
+      {activeTab === 'reenroll' && (
+        <section className="section-card">
+          <h2>🔁 Re-Enrollment Grades</h2>
+          {reEnrollments.map(req => (
+            <div key={req._id} className="reenroll-box">
+              <p><strong>DID:</strong> {req.studentDID}</p>
+              <p><strong>Semester:</strong> {req.semester}</p>
               <ul>
-                {request.courses.map(course => {
-                  const key = `${request.studentDID}_${course.courseName}`;
+                {req.courses.map(course => {
+                  const key = `${req.studentDID}_${course.courseName}`;
                   return (
                     <li key={course.courseName}>
-                      {course.courseName} - 
+                      {course.courseName}:
                       <input
                         type="number"
-                        placeholder="Enter marks"
+                        placeholder="marks"
                         value={reEnrollGradeInput[key] || ''}
-                        onChange={e =>
-                          setReEnrollGradeInput(prev => ({
-                            ...prev,
-                            [key]: e.target.value
-                          }))
-                        }
+                        onChange={e => setReEnrollGradeInput(p => ({ ...p, [key]: e.target.value }))}
                       />
-                      <button onClick={() => submitReEnrollGrade(request.studentDID, course.courseName, request.semester)}>
-                        Submit
-                      </button>
+                      <button onClick={() => submitReEnrollGrade(req.studentDID, course.courseName, req.semester)}>Submit</button>
                     </li>
                   );
                 })}
               </ul>
             </div>
-          ))
-        )}
-        {reEnrollGradeStatus && <p>{reEnrollGradeStatus}</p>}
-      </section>
-
-      <hr />
-
-      {/* GPA & CGPA */}
-      <section>
-        <h3>📊 View GPA / CGPA</h3>
-        <input
-          placeholder="Enter Student DID"
-          value={gpaInputDID}
-          onChange={e => setGpaInputDID(e.target.value)}
-/>
-<button onClick={fetchGpaCgpa}>Get GPA / CGPA</button>
-{gpaStatus && <p>{gpaStatus}</p>}
-{gpaData && (
-<div>
-<p>GPA: {gpaData.gpa}</p>
-<p>CGPA: {gpaData.cgpa}</p>
-</div>
-)}
-</section>
-</div>
-);
+          ))}
+          {reEnrollGradeStatus && <p className="status-message">{reEnrollGradeStatus}</p>}
+        </section>
+      )}
+    </div>
+  );
 };
 
 export default FacultyDashboard;

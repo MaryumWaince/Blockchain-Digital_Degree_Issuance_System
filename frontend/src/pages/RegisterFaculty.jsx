@@ -1,6 +1,7 @@
 // File: src/pages/RegisterFaculty.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../styles/Register.css'; // ✅ Reuse shared styling
 
 const RegisterFaculty = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const RegisterFaculty = () => {
 
       const data = await res.json();
       if (res.ok) {
-        alert('Faculty registered successfully!');
+        alert('✅ Faculty registered successfully!');
         navigate('/login/faculty');
       } else {
         alert(data.message || 'Registration failed');
@@ -33,18 +34,30 @@ const RegisterFaculty = () => {
   };
 
   return (
-    <div>
+    <div className="register-container">
       <h2>Faculty Registration</h2>
       <form onSubmit={handleSubmit}>
-        <input name="name" placeholder="Name" onChange={handleChange} required />
-        <input name="cnic" placeholder="CNIC" onChange={handleChange} required />
+        <input
+          name="name"
+          placeholder="Name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="cnic"
+          placeholder="CNIC"
+          value={formData.cnic}
+          onChange={handleChange}
+          required
+        />
         <button type="submit">Register</button>
       </form>
-      {/* ✅ Already Registered Button */}
-      <p style={{ marginTop: '15px' }}>
-        Already registered?{' '}
+
+      <div className="login-redirect">
+        <p>Already registered?</p>
         <button onClick={() => navigate('/login/faculty')}>Go to Login</button>
-      </p>
+      </div>
     </div>
   );
 };

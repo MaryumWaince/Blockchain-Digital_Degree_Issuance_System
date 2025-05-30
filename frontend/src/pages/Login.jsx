@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import '../styles/Login.css'; 
+
 
 const Login = () => {
   const { role } = useParams();
@@ -57,7 +59,7 @@ const Login = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="login-form">
       <h2>{role.charAt(0).toUpperCase() + role.slice(1)} Login</h2>
       {role === 'student' ? (
         <>

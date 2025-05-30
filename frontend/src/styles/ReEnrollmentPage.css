@@ -1,0 +1,53 @@
+.reenroll-page {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.reenroll-heading {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #2c3e50;
+}
+
+.reenroll-section {
+  background-color: #fdfdfd;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.reenroll-section h2 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+}
+
+.reenroll-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.reenroll-item {
+  background-color: #eef6ff;
+  padding: 12px 16px;
+  border-left: 4px solid #2980b9;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.no-requests {
+  color: #666;
+  font-style: italic;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 20px;
+}

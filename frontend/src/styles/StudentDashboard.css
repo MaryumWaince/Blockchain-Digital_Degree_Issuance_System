@@ -1,0 +1,165 @@
+/* File: src/styles/StudentDashboard.css */
+
+.student-dashboard {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 30px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.dashboard-heading {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.section {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.section h2 {
+  font-size: 1.4rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+.section p {
+  margin: 6px 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Personal Info Styling */
+.personal-info-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.centered-heading {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.info-box {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px 30px;
+  max-width: 620px;
+  width: 100%;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.info-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e5e5;
+  font-size: 1rem;
+}
+
+/* Lists */
+ul, li {
+  list-style-type: none;
+  padding-left: 0;
+  color: #444;
+}
+
+ul li::before {
+  content: "\2022";
+  color: #2c3e50;
+  font-weight: bold;
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+}
+
+/* Buttons */
+button {
+  background-color: #3498db;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+/* Links */
+.section-link, .module-link {
+  color: #2c3e50;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.section-link:hover, .module-link:hover {
+  color: #0077cc;
+  text-decoration: underline;
+}
+
+/* Re-enrollment styling */
+.reenroll-section {
+  background-color: #f2fbf7;
+  padding: 15px;
+  border-left: 4px solid #2ecc71;
+  border-radius: 6px;
+}
+
+/* Degree button */
+.btn-toggle-degree {
+  margin-top: 20px;
+  background-color: #27ae60;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-toggle-degree:hover {
+  background-color: #1e874b;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+/* Error Text */
+.error {
+  color: red;
+  text-align: center;
+  font-weight: 500;
+  margin-top: 20px;
+}

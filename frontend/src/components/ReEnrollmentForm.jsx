@@ -172,7 +172,7 @@ const ReEnrollmentForm = () => {
 
 export default ReEnrollmentForm;
 */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const ReEnrollmentForm = () => {
@@ -181,10 +181,34 @@ const ReEnrollmentForm = () => {
   const [reason, setReason] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [latest, setLatest] = useState(null);
+
+  const studentDID = localStorage.getItem('studentDID');
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
+  useEffect(() => {
+    if (!studentDID) {
+      setError('Student DID not found. Please log in again.');
+      return;
+    }
+
+    const fetchLatestRequest = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/api/reenrollment/student/${studentDID}`);
+        const sorted = (res.data || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (sorted.length > 0) {
+          setLatest(sorted[0]);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchLatestRequest();
+  }, [studentDID, backendUrl]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const studentDID = localStorage.getItem('studentDID');
 
     if (!studentDID) {
       setError('Student DID not found. Please log in again.');
@@ -192,21 +216,18 @@ const ReEnrollmentForm = () => {
     }
 
     try {
-      // Convert comma-separated string to array of course names
       const courseList = courses
         .split(',')
         .map((c) => c.trim())
-        .filter((c) => c !== '');
+        .filter((c) => c !== '')
+        .map((courseName) => ({ courseName }));
 
-      await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'}/api/reenrollment`,
-        {
-          studentDID,
-          semester: parseInt(semester),
-          reason,
-          courses: courseList, // Sending plain string array
-        }
-      );
+      await axios.post(`${backendUrl}/api/reenrollment`, {
+        studentDID,
+        semester: parseInt(semester),
+        reason,
+        courses: courseList,
+      });
 
       setMessage('✅ Re-enrollment request submitted successfully.');
       setError('');
@@ -221,27 +242,39 @@ const ReEnrollmentForm = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-8 p-6 border rounded-2xl shadow-lg bg-white">
-      <h2 className="text-2xl font-semibold mb-4">📚 Re-Enrollment Request</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-2xl shadow-xl border border-gray-200">
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+        📚 <span className="ml-2">Re-Enrollment Request</span>
+      </h2>
+
+      {latest && (
+        <p className="text-sm text-gray-600 mb-6">
+          <strong>Last Submitted:</strong>{' '}
+          {latest.createdAt && !isNaN(Date.parse(latest.createdAt))
+            ? new Date(latest.createdAt).toLocaleDateString()
+            : 'Not Available'}
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block font-medium mb-1">Semester Number:</label>
+          <label className="block text-gray-700 font-medium mb-1">Semester Number:</label>
           <input
             type="number"
             value={semester}
             onChange={(e) => setSemester(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="e.g., 4"
             required
           />
         </div>
 
         <div>
-          <label className="block font-medium mb-1">Courses (comma-separated):</label>
+          <label className="block text-gray-700 font-medium mb-1">Courses (comma-separated):</label>
           <textarea
             value={courses}
             onChange={(e) => setCourses(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows="3"
             placeholder="e.g., Data Structures, DBMS"
             required
@@ -249,30 +282,29 @@ const ReEnrollmentForm = () => {
         </div>
 
         <div>
-          <label className="block font-medium mb-1">Reason:</label>
+          <label className="block text-gray-700 font-medium mb-1">Reason:</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows="3"
-            placeholder="Explain why you are requesting re-enrollment"
+            placeholder="Explain your reason for re-enrollment"
             required
           />
         </div>
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition duration-300"
         >
           Submit Request
         </button>
       </form>
 
-      {message && <p className="mt-4 text-green-600 font-medium">{message}</p>}
-      {error && <p className="mt-4 text-red-600 font-medium">{error}</p>}
+      {message && <p className="mt-6 text-green-600 font-semibold text-center">{message}</p>}
+      {error && <p className="mt-6 text-red-600 font-semibold text-center">{error}</p>}
     </div>
   );
 };
 
 export default ReEnrollmentForm;
-

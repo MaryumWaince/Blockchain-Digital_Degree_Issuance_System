@@ -1,189 +1,184 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import StudentLeaveRequest from './StudentLeaveRequest';
+import { Link } from 'react-router-dom';
 import DegreeCertificate from './DegreeCertificate';
-import ReEnrollmentForm from './ReEnrollmentForm';
+// Removed: import CertificateDownload from './CertificateDownload';
+import '../styles/StudentDashboard.css';
 
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState(null);
-  const [attendance, setAttendance] = useState([]);
-  const [grades, setGrades] = useState([]);
-  const [fees, setFees] = useState([]);
-  const [leaves, setLeaves] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [gpaData, setGpaData] = useState({ semesters: [], cgpa: null });
-  const [reenrollments, setReenrollments] = useState([]);
+  const [degreeStatus, setDegreeStatus] = useState(null);
+  const [showDegree, setShowDegree] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showDegree, setShowDegree] = useState(false); // 🔍 Toggle for degree
+  const [message, setMessage] = useState('');
+  const [applying, setApplying] = useState(false);
 
   const studentDID = JSON.parse(localStorage.getItem('user'))?.did;
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
-  useEffect(() => {
-    if (studentDID) {
-      localStorage.setItem('studentDID', studentDID);
+  const fetchDegreeStatus = async () => {
+    try {
+      const res = await axios.get(`${backendUrl}/api/degree-request/${studentDID}`);
+      const requestStatus = res.data;
+      setDegreeStatus(requestStatus);
+
+      const degreeRes = await axios.get(`${backendUrl}/api/degree/issued/${studentDID}`);
+      const degreeData = degreeRes.data;
+
+      if (degreeData && degreeData.status === 'Issued') {
+        setDegreeStatus(prev => ({ ...prev, ...degreeData }));
+      }
+    } catch (err) {
+      console.error('Error fetching degree status:', err);
+      setDegreeStatus(null);
     }
-  }, [studentDID]);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (!studentDID) {
+      setError('Student DID not found. Please log in again.');
+      setLoading(false);
+      return;
+    }
+
+    const fetchStudentData = async () => {
       try {
-        if (!studentDID) throw new Error('Student DID not found. Please log in again.');
-
-        const [
-          studentRes,
-          attendanceRes,
-          gradesRes,
-          feesRes,
-          leavesRes,
-          gpaRes,
-          reenrollRes
-        ] = await Promise.all([
-          axios.get(`${backendUrl}/api/students/${studentDID}`),
-          axios.get(`${backendUrl}/api/attendance/student/${studentDID}`),
-          axios.get(`${backendUrl}/api/grades/${studentDID}`),
-          axios.get(`${backendUrl}/api/fees/${studentDID}`),
-          axios.get(`${backendUrl}/api/leaves/${studentDID}`),
-          axios.get(`${backendUrl}/api/grades/gpa/${studentDID}`),
-          axios.get(`${backendUrl}/api/reenrollment/student/${studentDID}`)
-        ]);
-
-        setStudentData(studentRes.data);
-        setAttendance(attendanceRes.data || []);
-        setGrades(gradesRes.data || []);
-        setFees(feesRes.data || []);
-        setLeaves(leavesRes.data || []);
-        setGpaData(gpaRes.data || { semesters: [], cgpa: null });
-        setReenrollments(reenrollRes.data || []);
-
-        // Fetch courses for all paid semesters
-        const paidSemesters = feesRes.data
-          .filter(fee => fee.status === 'paid')
-          .map(fee => Number(fee.semester));
-
-        const allCourses = [];
-        for (const semester of paidSemesters) {
-          const res = await axios.get(`${backendUrl}/api/courses/${studentRes.data.degree}/${semester}`);
-          res.data?.forEach(c => allCourses.push({ ...c, semester }));
-        }
-
-        setCourses(allCourses);
-        setLoading(false);
+        const res = await axios.get(`${backendUrl}/api/students/${studentDID}`);
+        setStudentData(res.data);
       } catch (err) {
-        setError(err.message);
-        setLoading(false);
+        console.error('Error fetching student data:', err);
+        setError('Failed to fetch student data.');
       }
     };
 
-    fetchData();
+    setLoading(true);
+    fetchStudentData();
+    fetchDegreeStatus().finally(() => setLoading(false));
   }, [studentDID, backendUrl]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const applyForDegree = async () => {
+    if (applying) return;
+    setApplying(true);
+    setMessage('');
+    try {
+      const res = await axios.post(`${backendUrl}/api/degree-request`, { studentDID });
+      setMessage(res.data.message);
+      await fetchDegreeStatus();
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to apply for degree.');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <p className="error">Error: {error}</p>;
 
   return (
-    <div>
-      <h1>🎓 Student Dashboard</h1>
+    <div className="student-dashboard">
+      <h1 className="dashboard-heading">🎓 Student Dashboard</h1>
 
-      <h2>👤 Personal Information</h2>
-      <p>Name: {studentData?.name}</p>
-      <p>CNIC: {studentData?.cnic}</p>
-      <p>Contact: {studentData?.contact}</p>
-      <p>Email: {studentData?.email}</p>
-      <p>Degree: {studentData?.degree}</p>
-      <p>Batch: {studentData?.batch}</p>
-      <p>DID: {studentData?.did}</p>
+      {/* Personal Info */}
+      <section className="section personal-info-container">
+        <h2 className="centered-heading">👤 Personal Information</h2>
+        <div className="info-box">
+          <table className="info-table">
+            <tbody>
+              <tr><td><strong>Name:</strong></td><td>{studentData?.name}</td></tr>
+              <tr><td><strong>CNIC:</strong></td><td>{studentData?.cnic}</td></tr>
+              <tr><td><strong>Contact:</strong></td><td>{studentData?.contact}</td></tr>
+              <tr><td><strong>Email:</strong></td><td>{studentData?.email}</td></tr>
+              <tr><td><strong>Degree:</strong></td><td>{studentData?.degree}</td></tr>
+              <tr><td><strong>Batch:</strong></td><td>{studentData?.batch}</td></tr>
+              <tr><td><strong>DID:</strong></td><td>{studentData?.did}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <h2>💳 Fee Status</h2>
-      <ul>
-        {fees.map((fee) => (
-          <li key={fee._id}>Semester: {fee.semester}, Status: {fee.status}</li>
-        ))}
-      </ul>
+      {/* Navigation Links */}
+      <section className="section"><h2><Link to={`/student/fees?did=${studentDID}`} className="section-link">💳 Fee Status ▶️</Link></h2></section>
+      <section className="section"><h2><Link to={`/student/courses?did=${studentDID}`} className="section-link">📚 Enrolled Courses ▶️</Link></h2></section>
+      <section className="section"><h2><Link to={`/attendance?did=${studentDID}`} className="section-link">📅 Attendance ▶️</Link></h2></section>
+      <section className="section"><h2><Link to={`/student/grades?did=${studentDID}`} className="section-link">📈 Academics ▶️</Link></h2></section>
+      <section className="section"><h2><Link to={`/student/leaves?did=${studentDID}`} className="section-link">📝 Leave Requests ▶️</Link></h2></section>
+      <section className="section"><h2><Link to={`/student/reenrollment`} className="section-link">🔄 Re-enrollment ▶️</Link></h2></section>
 
-      {courses.length > 0 && (
-        <>
-          <h2>📚 Enrolled Courses</h2>
-          <ul>
-            {courses.map((course) => (
-              <li key={course._id}>Semester {course.semester} — {course.courseName}</li>
-            ))}
-          </ul>
-        </>
+      {/* Degree Issuance */}
+      <section className="section">
+        <h2 className="centered-heading">🎓 Degree Issuance</h2>
+
+        {!degreeStatus || !degreeStatus.status ? (
+          <button onClick={applyForDegree} className="btn-apply-degree" disabled={applying}>
+            {applying ? 'Applying...' : 'Apply for Degree Issuance'}
+          </button>
+        ) : (
+          <div className="degree-status-box">
+            <p><strong>Status:</strong> {degreeStatus.status}</p>
+
+            {degreeStatus.remark && (
+              <p className="error"><strong>Remark:</strong> {degreeStatus.remark}</p>
+            )}
+
+            {degreeStatus.status === 'Rejected' && (
+              <button onClick={applyForDegree} className="btn-apply-degree" disabled={applying}>
+                {applying ? 'Re-applying...' : 'Re-Apply for Degree'}
+              </button>
+            )}
+
+            {/* Removed CertificateDownload component here */}
+
+            {(degreeStatus.status === 'Issued' || degreeStatus.status === 'Approved') && degreeStatus.pdfUrl && (
+              <a
+                href={degreeStatus.pdfUrl.startsWith('http') ? degreeStatus.pdfUrl : `${backendUrl}${degreeStatus.pdfUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-download-degree"
+                style={{
+                  display: 'inline-block',
+                  marginTop: '10px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                }}
+              >
+                📥 View / Download Degree PDF
+              </a>
+            )}
+          </div>
+        )}
+
+        {message && <p className="text-red-500 mt-2">{message}</p>}
+      </section>
+
+      {/* Degree Status Overview */}
+      {degreeStatus && (
+        <div className="mt-6 bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-bold mb-2">🎓 Degree Status</h2>
+          <p className="mb-1"><strong>Status:</strong> {degreeStatus.status}</p>
+
+          {degreeStatus.status === 'Rejected' && (
+            <p className="text-red-600">❌ Degree Request Rejected — {degreeStatus.remark || 'No remark provided'}</p>
+          )}
+          {degreeStatus.status === 'Pending' && (
+            <p className="text-yellow-600">⏳ Degree Request Pending Review</p>
+          )}
+          {degreeStatus.status === 'Issued' && (
+            <p className="text-green-600">✅ Degree has been officially issued.</p>
+          )}
+        </div>
       )}
 
-      <h2>📅 Attendance</h2>
-      <ul>
-        {attendance.map((record, idx) => (
-          <li key={idx}>
-            {new Date(record.date).toLocaleDateString()} — Course: {record.course} — {record.status}
-          </li>
-        ))}
-      </ul>
-
-      <h2>📈 Grades</h2>
-      <ul>
-        {grades.map((grade) => (
-          <li key={grade._id}>
-            Semester: {grade.semester}, Course: {grade.course || grade.courseName}, Credit Hours: {grade.creditHours || 'N/A'},<br />
-            Total Marks: {grade.totalMarks || 'N/A'}, Obtained: {grade.obtainedMarks || grade.marks}, Grade: {grade.grade}, Quality Points: {grade.qualityPoints || 'N/A'}
-          </li>
-        ))}
-      </ul>
-
-      <h2>📊 GPA Summary</h2>
-      {gpaData.semesters.length > 0 ? (
-        <>
-          <ul>
-            {gpaData.semesters.map((s, idx) => (
-              <li key={idx}>Semester {s.semester} — GPA: {s.gpa}</li>
-            ))}
-          </ul>
-          <p><strong>CGPA:</strong> {gpaData.cgpa}</p>
-        </>
-      ) : (
-        <p>GPA summary not available yet.</p>
-      )}
-
-      <h2>📝 Leave Requests</h2>
-      {leaves.length === 0 ? (
-        <p>No leave requests yet.</p>
-      ) : (
-        <ul>
-          {leaves.map((leave) => (
-            <li key={leave._id}>
-              {leave.reason} — {new Date(leave.date).toLocaleDateString()} — {leave.approved ? '✅ Approved' : '⏳ Pending'}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h2>🔁 Re-Enrollment Requests</h2>
-      {reenrollments.length === 0 ? (
-        <p>No re-enrollment requests yet.</p>
-      ) : (
-        <ul>
-          {reenrollments.map((req) => (
-            <li key={req._id}>
-              Semester: {req.semester} — Courses: {req.courses.map(course => course.courseName).join(', ')} — 
-              Status: {req.status === 'Approved' ? '✅ Approved' : req.status === 'Rejected' ? '❌ Rejected' : '⏳ Pending'}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <StudentLeaveRequest />
-      <ReEnrollmentForm />
-
-      <hr />
-      <h2>🎓 Degree Certificate</h2>
-      {!showDegree ? (
-        <button onClick={() => setShowDegree(true)}>View Degree</button>
-      ) : (
-        <DegreeCertificate studentDID={studentDID} />
-      )}
-    
+      {/* Degree Certificate Preview */}
+      <section className="section">
+        <button onClick={() => setShowDegree(!showDegree)} className="btn-toggle-degree">
+          {showDegree ? 'Hide' : 'Show'} Degree Certificate
+        </button>
+        {showDegree && <DegreeCertificate studentDID={studentDID} />}
+      </section>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import '../styles/Register.css'; 
 
 const Register = () => {
   const { role } = useParams();
@@ -30,7 +31,6 @@ const Register = () => {
           const did = data.did;
           const privateKey = data.privateKey;
 
-          // ✅ Store DID and Private Key locally
           localStorage.setItem(`privateKey-${did}`, privateKey);
           localStorage.setItem('user', JSON.stringify({ did }));
         }
@@ -50,7 +50,7 @@ const Register = () => {
   };
 
   return (
-    <div>
+    <div className="register-container">
       <h2>{role.charAt(0).toUpperCase() + role.slice(1)} Registration</h2>
       <form onSubmit={handleSubmit}>
         <input name="name" placeholder="Name" onChange={handleChange} required />
@@ -79,7 +79,7 @@ const Register = () => {
       </form>
 
       {role === 'student' && (
-        <div style={{ marginTop: '1rem' }}>
+        <div className="login-redirect">
           <p>Already registered?</p>
           <button onClick={handleLoginRedirect}>Go to Login</button>
         </div>

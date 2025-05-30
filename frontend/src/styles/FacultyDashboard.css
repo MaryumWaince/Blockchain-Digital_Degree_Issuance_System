@@ -1,0 +1,167 @@
+.faculty-dashboard {
+  font-family: 'Segoe UI', sans-serif;
+  padding: 30px;
+  max-width: 1200px;
+  margin: auto;
+  color: #2c3e50;
+}
+
+.dashboard-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.tab-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.tab-buttons button {
+  padding: 10px 20px;
+  font-weight: 500;
+  background: #f0f4ff;
+  color: #0366d6;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-buttons button:hover {
+  background: #e0ecff;
+  border-color: #0366d6;
+}
+
+.tab-buttons button.active {
+  background: #0366d6;
+  color: #fff;
+  font-weight: bold;
+}
+
+.section-card {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 30px;
+  transition: box-shadow 0.3s ease;
+}
+
+.section-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.section-card h2 {
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: #222;
+}
+
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.form-inline input {
+  flex: 1 1 180px;
+  padding: 10px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.form-inline button {
+  background-color: #0366d6;
+  color: #fff;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.form-inline button:hover {
+  background-color: #024b9b;
+}
+
+.status-message {
+  margin-top: 8px;
+  font-weight: 500;
+  color: green;
+}
+
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  margin-top: 10px;
+}
+
+.status-table th,
+.status-table td {
+  border: 1px solid #ddd;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.status-table th {
+  background-color: #f0f4f8;
+  color: #333;
+}
+
+.attendance-inputs {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.attendance-inputs input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  flex: 1;
+}
+
+.attendance-inputs button {
+  padding: 10px 16px;
+  background-color: #28a745;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.attendance-inputs button:hover {
+  background-color: #218838;
+}
+
+.reenroll-box {
+  margin-top: 15px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #fefefe;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.reenroll-box input {
+  margin-left: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 120px;
+}

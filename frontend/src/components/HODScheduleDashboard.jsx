@@ -1,5 +1,8 @@
+// src/components/HODScheduleDashboard.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import '../styles/HODDashboard.css';
+import AddCourseForm from './AddCourseForm';
 
 const HODScheduleDashboard = () => {
   const [leaves, setLeaves] = useState([]);
@@ -7,196 +10,150 @@ const HODScheduleDashboard = () => {
   const [reEnrollments, setReEnrollments] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [openSections, setOpenSections] = useState({
+    leaves: false,
+    schedule: false,
+    reenrollments: false,
+    addcourse: false
+  });
+
+  const toggleSection = section => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const baseURL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    const fetchLeavesAndSchedule = async () => {
+    const fetchData = async () => {
       try {
-        const [leaveRes, scheduleRes] = await Promise.all([
-          fetch(`${baseURL}/api/leaves/all`),
-          fetch(`${baseURL}/api/schedule/all`),
+        const [leaveRes, scheduleRes, reenrollRes] = await Promise.all([
+          axios.get(`${baseURL}/api/leaves/all`),
+          axios.get(`${baseURL}/api/schedule/all`),
+          axios.get(`${baseURL}/api/reenrollment`)
         ]);
-        const [leaveData, scheduleData] = await Promise.all([
-          leaveRes.json(),
-          scheduleRes.json(),
-        ]);
-        setLeaves(leaveData);
-        setScheduleRequests(scheduleData);
+
+        setLeaves(leaveRes.data);
+        setScheduleRequests(scheduleRes.data);
+        setReEnrollments(reenrollRes.data);
+        setLoading(false);
       } catch (err) {
-        console.error('Error loading leaves or schedule requests:', err);
-        setMessage('Failed to load leave or schedule requests.');
+        console.error('Error loading data:', err);
+        setMessage('Failed to load dashboard data.');
+        setLoading(false);
       }
     };
 
-    const fetchReEnrollments = async () => {
-      try {
-        const res = await axios.get(`${baseURL}/api/reenrollment`);
-        setReEnrollments(res.data);
-      } catch (error) {
-        console.error('Error fetching re-enrollment data:', error);
-        setMessage('Failed to load re-enrollment requests.');
-      }
-    };
-
-    const fetchAll = async () => {
-      setLoading(true);
-      await Promise.all([fetchLeavesAndSchedule(), fetchReEnrollments()]);
-      setLoading(false);
-    };
-
-    fetchAll();
+    fetchData();
   }, [baseURL]);
 
-  const approveLeave = async (id) => {
+  const approveLeave = async id => {
     try {
-      const res = await fetch(`${baseURL}/api/leaves/approve/${id}`, { method: 'POST' });
-      if (res.ok) {
-        setLeaves(prev => prev.map(l => (l._id === id ? { ...l, approved: true } : l)));
-        alert('Leave approved.');
-      } else {
-        alert('Failed to approve leave.');
-      }
+      await axios.post(`${baseURL}/api/leaves/approve/${id}`);
+      setLeaves(prev => prev.map(l => (l._id === id ? { ...l, approved: true } : l)));
     } catch {
-      alert('Error approving leave.');
+      alert('Error approving leave');
     }
   };
 
-  const approveSchedule = async (id) => {
+  const approveSchedule = async id => {
     try {
-      const res = await fetch(`${baseURL}/api/schedule/approve/${id}`, { method: 'POST' });
-      if (res.ok) {
-        setScheduleRequests(prev => prev.map(r => (r._id === id ? { ...r, approved: true } : r)));
-        alert('Schedule approved.');
-      } else {
-        alert('Failed to approve schedule.');
-      }
+      await axios.post(`${baseURL}/api/schedule/approve/${id}`);
+      setScheduleRequests(prev => prev.map(r => (r._id === id ? { ...r, approved: true } : r)));
     } catch {
-      alert('Error approving schedule.');
+      alert('Error approving schedule');
     }
   };
 
-const handleReEnrollmentAction = async (id, status) => {
-  try {
-    const result = await axios.patch(`${baseURL}/api/reenrollment/${id}/status`, { status });
-    console.log('Update result:', result.data);
-    setMessage(`Re-enrollment ${status} successfully.`);
-    const res = await axios.get(`${baseURL}/api/reenrollment`);
-    setReEnrollments(res.data);
-  } catch (err) {
-    console.error('Request failed:', err.response?.data || err.message);
-    setMessage('Error updating re-enrollment status.');
-  }
-};
-
-
+  const handleReEnrollmentAction = async (id, status) => {
+    try {
+      await axios.patch(`${baseURL}/api/reenrollment/${id}/status`, { status });
+      const res = await axios.get(`${baseURL}/api/reenrollment`);
+      setReEnrollments(res.data);
+      setMessage(`Re-enrollment ${status}`);
+    } catch (err) {
+      setMessage('Failed to update re-enrollment');
+    }
+  };
 
   if (loading) return <p>Loading HOD Dashboard...</p>;
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>🎓 HOD Dashboard</h1>
+    <div className="hod-dashboard">
+      <h1 className="dashboard-heading">🎓 HOD Dashboard</h1>
 
-      {/* Medical Leave Requests */}
       <section>
-        <h2>📋 Medical Leave Requests</h2>
-        {leaves.length === 0 ? (
-          <p>No leave requests found.</p>
-        ) : (
-          leaves.map(leave => (
-            <div key={leave._id} style={cardStyle}>
-              <p><strong>DID:</strong> {leave.did}</p>
-              <p><strong>Date:</strong> {leave.date ? new Date(leave.date).toLocaleDateString() : 'N/A'}</p>
-              <p><strong>Reason:</strong> {leave.reason}</p>
-              <p><strong>Status:</strong> {leave.approved ? '✅ Approved' : '⏳ Pending'}</p>
-              {!leave.approved && (
-                <button onClick={() => approveLeave(leave._id)} style={buttonStyle}>Approve</button>
-              )}
-            </div>
-          ))
-        )}
-      </section>
-
-      {/* Schedule Change Requests */}
-      <section>
-        <h2>📅 Schedule Change Requests</h2>
-        {scheduleRequests.length === 0 ? (
-          <p>No schedule change requests found.</p>
-        ) : (
-          scheduleRequests.map(req => (
-            <div key={req._id} style={cardStyle}>
-              <p><strong>Faculty Name:</strong> {req.facultyName}</p>
-              <p><strong>Class ID:</strong> {req.classId}</p>
-              <p><strong>Old Date:</strong> {req.oldDate ? new Date(req.oldDate).toLocaleDateString() : 'N/A'}</p>
-              <p><strong>New Date:</strong> {req.newDate ? new Date(req.newDate).toLocaleDateString() : 'N/A'}</p>
-              <p><strong>Reason:</strong> {req.reason}</p>
-              <p><strong>Status:</strong> {req.approved ? '✅ Approved' : '⏳ Pending'}</p>
-              {!req.approved && (
-                <button onClick={() => approveSchedule(req._id)} style={buttonStyle}>Approve</button>
-              )}
-            </div>
-          ))
-        )}
-      </section>
-
-      {/* Re-Enrollment Requests */}
-      <section>
-        <h2>📩 Re-Enrollment Requests</h2>
-        {message && <p style={{ marginBottom: '10px', color: '#1565c0', fontWeight: 'bold' }}>{message}</p>}
-        {reEnrollments.length === 0 ? (
-          <p>No re-enrollment requests found.</p>
-        ) : (
-          <table border="1" cellPadding="8" style={{ width: '100%', marginBottom: '20px', borderCollapse: 'collapse' }}>
+        <h2 className="section-heading" onClick={() => toggleSection('leaves')}>
+          📋 Medical Leave Requests {openSections.leaves ? '🔽' : '▶️'}
+        </h2>
+        {openSections.leaves && (
+          <table className="table-style">
             <thead>
-              <tr style={{ backgroundColor: '#eee' }}>
-                <th>Student DID</th>
-                <th>Courses</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Submitted At</th>
-                <th>Action</th>
-              </tr>
+              <tr><th>DID</th><th>Date</th><th>Reason</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {leaves.map(leave => (
+                <tr key={leave._id}>
+                  <td>{leave.did}</td>
+                  <td>{new Date(leave.date).toLocaleDateString()}</td>
+                  <td>{leave.reason}</td>
+                  <td>{leave.approved ? '✅' : '⏳'}</td>
+                  <td>{!leave.approved && <button className="button-style" onClick={() => approveLeave(leave._id)}>Approve</button>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section>
+        <h2 className="section-heading" onClick={() => toggleSection('schedule')}>
+          📅 Schedule Change Requests {openSections.schedule ? '🔽' : '▶️'}
+        </h2>
+        {openSections.schedule && (
+          <table className="table-style">
+            <thead>
+              <tr><th>Faculty</th><th>Class</th><th>Old Date</th><th>New Date</th><th>Reason</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {scheduleRequests.map(req => (
+                <tr key={req._id}>
+                  <td>{req.facultyName}</td>
+                  <td>{req.classId}</td>
+                  <td>{new Date(req.oldDate).toLocaleDateString()}</td>
+                  <td>{new Date(req.newDate).toLocaleDateString()}</td>
+                  <td>{req.reason}</td>
+                  <td>{req.approved ? '✅' : '⏳'}</td>
+                  <td>{!req.approved && <button className="button-style" onClick={() => approveSchedule(req._id)}>Approve</button>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section>
+        <h2 className="section-heading" onClick={() => toggleSection('reenrollments')}>
+          📩 Re-Enrollment Requests {openSections.reenrollments ? '🔽' : '▶️'}
+        </h2>
+        {openSections.reenrollments && (
+          <table className="table-style">
+            <thead>
+              <tr><th>DID</th><th>Courses</th><th>Reason</th><th>Status</th><th>Submitted</th><th>Action</th></tr>
             </thead>
             <tbody>
               {reEnrollments.map(req => (
                 <tr key={req._id}>
                   <td>{req.studentDID}</td>
-                  <td>
-                    {Array.isArray(req.courses)
-                      ? req.courses.map(course =>
-                          typeof course === 'object'
-                            ? course.courseName || JSON.stringify(course)
-                            : course
-                        ).join(', ')
-                      : req.courses}
-                  </td>
+                  <td>{req.courses.map(c => typeof c === 'object' ? c.courseName : c).join(', ')}</td>
                   <td>{req.reason}</td>
+                  <td>{req.status}</td>
+                  <td>{new Date(req.createdAt).toLocaleDateString()}</td>
                   <td>
-                    {req.status === 'pending'
-                      ? '⏳ Pending'
-                      : req.status === 'Approved'
-                      ? '✅ Approved'
-                      : '❌ Rejected'}
-                  </td>
-                  <td>{req.createdAt ? new Date(req.createdAt).toLocaleDateString() : 'N/A'}</td>
-                  <td>
-                    {req.status === 'pending' ? (
+                    {req.status === 'pending' && (
                       <>
-                        <button
-                          onClick={() => handleReEnrollmentAction(req._id, 'Approved')}
-                          style={buttonStyle}
-                        >
-                          ✅ Approve
-                        </button>
-                        <button
-                          onClick={() => handleReEnrollmentAction(req._id, 'Rejected')}
-                          style={{ ...buttonStyle, backgroundColor: '#f44336', marginLeft: '8px' }}
-                        >
-                          ❌ Reject
-                        </button>
+                        <button className="button-style" onClick={() => handleReEnrollmentAction(req._id, 'Approved')}>✅</button>
+                        <button className="button-style button-danger" onClick={() => handleReEnrollmentAction(req._id, 'Rejected')}>❌</button>
                       </>
-                    ) : (
-                      <em>No action needed</em>
                     )}
                   </td>
                 </tr>
@@ -205,27 +162,15 @@ const handleReEnrollmentAction = async (id, status) => {
           </table>
         )}
       </section>
+
+      <section>
+        <h2 className="section-heading" onClick={() => toggleSection('addcourse')}>
+          ➕ Add New Course {openSections.addcourse ? '🔽' : '▶️'}
+        </h2>
+        {openSections.addcourse && <AddCourseForm />}
+      </section>
     </div>
   );
-};
-
-const cardStyle = {
-  border: '1px solid #ddd',
-  marginBottom: '15px',
-  padding: '15px',
-  borderRadius: '10px',
-  backgroundColor: '#f9f9f9',
-  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-};
-
-const buttonStyle = {
-  padding: '8px 12px',
-  marginTop: '8px',
-  backgroundColor: '#4CAF50',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
 };
 
 export default HODScheduleDashboard;
