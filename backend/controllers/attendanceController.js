@@ -2,72 +2,79 @@ const Fingerprint = require('../models/Fingerprint');
 const Attendance = require('../models/Attendance');
 const crypto = require('crypto');
 
+// ✅ Store fingerprint hash for a student
 exports.storeFingerprint = async (req, res) => {
   const { did, fingerprintData } = req.body;
+
   if (!did || !fingerprintData) {
-    return res.status(400).json({ message: 'DID and fingerprint are required' });
+    return res.status(400).json({ message: 'DID and fingerprint data are required' });
   }
 
   const fingerprintHash = crypto.createHash('sha256').update(fingerprintData).digest('hex');
 
   try {
     const existing = await Fingerprint.findOne({ did });
+
     if (existing) {
       existing.fingerprintHash = fingerprintHash;
       await existing.save();
-      return res.json({ message: 'Fingerprint updated' });
+      return res.status(200).json({ message: 'Fingerprint updated successfully' });
     }
 
     await Fingerprint.create({ did, fingerprintHash });
-    res.status(201).json({ message: 'Fingerprint stored' });
+    res.status(201).json({ message: 'Fingerprint stored successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Error storing fingerprint', error: err.message });
+    res.status(500).json({ message: 'Server error storing fingerprint', error: err.message });
   }
 };
 
+// ✅ Mark attendance using fingerprint match
 exports.markAttendanceByFingerprint = async (req, res) => {
-  const { fingerprintData, course } = req.body;
+  const { fingerprintData, courseName, semester } = req.body;
 
-  if (!fingerprintData || !course) {
-    return res.status(400).json({ message: 'Fingerprint and course are required' });
+  if (!fingerprintData || !courseName || semester === undefined) {
+    return res.status(400).json({ message: 'Fingerprint, courseName, and semester are required' });
   }
 
-  const hash = crypto.createHash('sha256').update(fingerprintData).digest('hex');
-
   try {
-    const user = await Fingerprint.findOne({ fingerprintHash: hash });
-    if (!user) return res.status(404).json({ message: 'Fingerprint not recognized' });
+    const fingerprintHash = crypto.createHash('sha256').update(fingerprintData).digest('hex');
+    const matched = await Fingerprint.findOne({ fingerprintHash });
 
-    const record = await Attendance.create({
-      did: user.did,
-      course,
+    if (!matched) {
+      return res.status(404).json({ message: 'Fingerprint not recognized' });
+    }
+
+    const newRecord = new Attendance({
+      did: matched.did,
+      courseName,
+      semester: parseInt(semester),
       status: 'present',
-      verifiedByFingerprint: true
+      verifiedByFingerprint: true,
+      date: new Date()
     });
 
-    res.status(200).json({ message: 'Attendance marked', record });
+    await newRecord.save();
+    res.status(200).json({ message: 'Attendance marked successfully', record: newRecord });
   } catch (err) {
     res.status(500).json({ message: 'Error marking attendance', error: err.message });
   }
 };
 
+// ✅ Get attendance records by course name
 exports.getAttendanceByCourse = async (req, res) => {
-  const { course } = req.params;
-
   try {
-    const records = await Attendance.find({ course });
-    res.json(records);
+    const records = await Attendance.find({ courseName: req.params.course });
+    res.status(200).json(records);
   } catch (err) {
-    res.status(500).json({ message: 'Error retrieving attendance', error: err.message });
+    res.status(500).json({ message: 'Error retrieving course attendance', error: err.message });
   }
 };
 
+// ✅ Get attendance records by student DID
 exports.getAttendanceByDID = async (req, res) => {
-  const { did } = req.params;
-
   try {
-    const records = await Attendance.find({ did });
-    res.json(records);
+    const records = await Attendance.find({ did: req.params.did });
+    res.status(200).json(records);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving student attendance', error: err.message });
   }

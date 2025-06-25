@@ -1,18 +1,17 @@
-// File: backend/routes/leaveRoutes.js
 const express = require('express');
 const router = express.Router();
 const Leave = require('../models/Leave');
 
 // ✅ POST: Submit a leave request
 router.post('/request', async (req, res) => {
-  const { did, reason, date } = req.body;
+  const { studentDID, reason, date } = req.body;
 
-  if (!did || !reason || !date) {
-    return res.status(400).json({ message: 'Missing required fields: did, reason, date' });
+  if (!studentDID || !reason || !date) {
+    return res.status(400).json({ message: 'Missing required fields: studentDID, reason, date' });
   }
 
   try {
-    const leave = new Leave({ did, reason, date, approved: false });
+    const leave = new Leave({ studentDID, reason, date, approved: false });
     await leave.save();
     res.status(201).json({ message: 'Leave requested successfully', leave });
   } catch (err) {
@@ -48,9 +47,9 @@ router.get('/all', async (req, res) => {
 });
 
 // ✅ GET: Leaves for a specific student
-router.get('/:did', async (req, res) => {
+router.get('/:studentDID', async (req, res) => {
   try {
-    const leaves = await Leave.find({ did: req.params.did }).sort({ date: -1 });
+    const leaves = await Leave.find({ studentDID: req.params.studentDID }).sort({ date: -1 });
     res.status(200).json(leaves);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch student leaves', error: err.message });

@@ -3,22 +3,31 @@ const router = express.Router();
 const {
   submitDegreeRequest,
   updateDegreeStatusAndGeneratePDF,
-   getAllDegreeRequests,
-   getDegreeRequestByStudentDID,
+  getAllDegreeRequests,
+  getDegreeRequestByStudentDID,
+  issueDegreeToBlockchain,
+  getDegreeHashFromBlockchain,
 } = require('../controllers/degreeRequestController');
 
-// Student submits a degree request
+// 🎓 Student submits a degree request
 router.post('/', submitDegreeRequest);
 
-// Admin updates status & generates PDF
+// 📝 Admin updates degree status and generates PDF
 router.post('/update-status', updateDegreeStatusAndGeneratePDF);
 
+// ⛓️ Admin issues degree to blockchain (after PDF + IPFS)
+router.post('/issue', issueDegreeToBlockchain);
+
+// 🔍 Fetch the degree hash from blockchain for a student
+router.get('/hash/:studentDID', getDegreeHashFromBlockchain);
+
+// 📃 Admin/Faculty fetches all degree requests
 router.get('/', getAllDegreeRequests);
-// Fetch one student's degree request by DID
+
+// 🔎 Get specific student's degree request by DID
 router.get('/:studentDID', getDegreeRequestByStudentDID);
 
 module.exports = router;
-
 
 /*
 const express = require('express');

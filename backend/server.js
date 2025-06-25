@@ -2,7 +2,9 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
+const generateDegreePDF = require('./utils/generateDegreePDF'); // Import PDF generator
 
 // Route Imports
 const studentRoutes = require('./routes/studentRoutes');
@@ -30,9 +32,15 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: 'http://localhost:3000',
-  credentials: true
+  credentials: true,
 }));
 app.use(express.json());
+
+// Ensure degree_pdfs directory exists
+const degreePdfDir = path.join(__dirname, 'degree_pdfs');
+if (!fs.existsSync(degreePdfDir)) {
+  fs.mkdirSync(degreePdfDir, { recursive: true });
+}
 
 // API Routes
 app.use('/api/students', studentRoutes);
@@ -50,15 +58,51 @@ app.use('/api/reenrollment', reenrollmentRoutes);
 app.use('/api/signature', signatureRoutes);
 app.use('/api/degree-request', degreeRequestRoutes);
 
-//app.use('/api/degree-request', require('./routes/degreeRequest'));
+// New route to generate Degree PDF
+app.post('/api/degree/generate', async (req, res) => {
+  try {
+    const {
+      studentName,
+      studentDID,
+      degreeTitle,
+      batchNumber,
+      resultDate,
+      issueDate,
+      cgpa,
+      semesters,
+      qrURL,
+    } = req.body;
 
+    const vcSignaturePath = path.join(__dirname, 'uploads', 'signatures', 'VC-Signature.png');
+    const outputPath = path.join(degreePdfDir, `degree_${studentDID}.pdf`);
+
+    await generateDegreePDF({
+      studentName,
+      studentDID,
+      degreeTitle,
+      batchNumber,
+      resultDate,
+      issueDate,
+      cgpa,
+      semesters,
+      qrURL,
+      vcSignaturePath,
+      outputPath,
+    });
+
+    res.download(outputPath);
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    res.status(500).send('Failed to generate degree PDF');
+  }
+});
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/degree_pdfs', express.static(path.join(__dirname, 'degree_pdfs')));
+app.use('/degree_pdfs', express.static(degreePdfDir));
 
-// Optional manual file route
+// Optional manual file route to serve PDFs by filename
 app.get('/degree_pdfs/:filename', (req, res) => {
-  const filePath = path.join(__dirname, 'degree_pdfs', req.params.filename);
+  const filePath = path.join(degreePdfDir, req.params.filename);
   res.sendFile(filePath, err => {
     if (err) {
       console.error('Error sending file:', err);

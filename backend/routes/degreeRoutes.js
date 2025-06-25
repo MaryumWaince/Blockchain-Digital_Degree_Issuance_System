@@ -4,7 +4,8 @@ const Student = require('../models/Student');
 const Grade = require('../models/Grade');
 const Course = require('../models/Course');
 const Degree = require('../models/Degree');
-const { getDegree, storeDegreeHashOnBlockchain } = require('../controllers/degreeController');
+const { getDegree } = require('../controllers/degreeController');
+
 
 // ✅ 1. Academic Record Route
 router.get('/academic/:studentDID', async (req, res) => {
@@ -71,6 +72,34 @@ router.get('/academic/:studentDID', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+// POST /api/degree/store-hash
+router.post('/store-hash', async (req, res) => {
+  const { studentDID, blockchainHash } = req.body;
+
+  if (!studentDID || !blockchainHash) {
+    return res.status(400).json({ message: 'studentDID and blockchainHash are required' });
+  }
+
+  try {
+    // Update blockchainHash field directly (atomic update, no schema re-validation)
+    const updatedDegree = await Degree.findOneAndUpdate(
+      { studentDID },
+      { blockchainHash },
+      { new: true, runValidators: false } // Don't validate missing required fields
+    );
+
+    if (!updatedDegree) {
+      return res.status(404).json({ message: 'Degree not found for this studentDID' });
+    }
+
+    res.status(200).json({ message: 'Blockchain hash stored successfully', blockchainHash });
+  } catch (error) {
+    console.error('Error storing blockchain hash:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 
 // ✅ 2. Add new degree with reused CGPA logic
 router.post('/add', async (req, res) => {
@@ -151,14 +180,76 @@ router.post('/add', async (req, res) => {
   }
 });
 
+// ✅ 4. Public Degree Verification by DID or Hash
+
+
+router.get('/verify', async (req, res) => {
+  const { input } = req.query;
+
+  if (!input) {
+    return res.status(400).json({ error: 'Input query parameter is required' });
+  }
+
+  try {
+    const degree = await Degree.findOne({
+      $or: [{ studentDID: input }, { blockchainHash: input }],
+    });
+
+    if (!degree) {
+      return res.status(404).json({ error: 'Degree not found' });
+    }
+
+    // Fetch student data to get batch number (and any other info)
+    const student = await Student.findOne({ did: degree.studentDID });
+
+    res.json({
+      name: degree.studentName || (student ? student.name : 'N/A'),
+      studentDID: degree.studentDID,
+      degree: degree.degree,
+      cgpa: degree.cgpa || 'N/A',
+      batch: student ? student.batch : 'Not Provided', // batch from student model
+      issueDate: degree.issuedOn ? degree.issuedOn.toISOString().split('T')[0] : 'N/A',
+      resultDate: degree.resultDeclarationDate ? degree.resultDeclarationDate.toISOString().split('T')[0] : 'N/A',
+      ipfsHash: degree.ipfsHash || null,
+      blockchainHash: degree.blockchainHash || null,
+      pdfUrl: degree.pdfUrl || null,
+      qrCodeUrl: degree.qrCodeUrl || null,
+    });
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+module.exports = router;
+
+router.post('/notification/read', async (req, res) => {
+  const { studentDID } = req.body;
+  try {
+    const updatedDegree = await Degree.findOneAndUpdate(
+      { studentDID, notification: true },
+      { notification: false },
+      { new: true }
+    );
+
+    if (!updatedDegree) {
+      return res.status(404).json({ message: 'Notification already read or degree not found' });
+    }
+
+    res.status(200).json({ message: 'Notification marked as read' });
+  } catch (err) {
+    console.error('Error updating notification:', err);
+    res.status(500).json({ error: 'Failed to update notification' });
+  }
+});
 
 // ✅ 3. Blockchain-issued Degree Info
 
 // Get Degree by studentDID route (calls controller function)
 router.get('/issued/:studentDID', getDegree);
 
-// Admin only route, protect with middleware if you have authentication
-router.post('/store-hash', storeDegreeHashOnBlockchain);
+
+
 
 module.exports = router;
 

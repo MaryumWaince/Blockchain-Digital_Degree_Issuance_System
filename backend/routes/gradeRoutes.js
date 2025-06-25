@@ -101,7 +101,6 @@ router.get('/gpa/:studentDID', async (req, res) => {
 });
 
 module.exports = router;
-
 /*
 const express = require('express');
 const router = express.Router();

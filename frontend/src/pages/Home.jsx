@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 const rotatingImages = [
-  '/banner1.jpg',
-  '/banner2.webp',
-  '/banner3.jpg'
+  '/banner6.avif',
+  '/banner10.webp',
+  '/banner9.webp'
 ];
 
 const Home = () => {
@@ -27,7 +27,7 @@ const Home = () => {
         padding: '60px 20px',
         textAlign: 'center',
         fontFamily: 'Arial, sans-serif',
-        backgroundImage: 'url("/background.jpg")',
+        backgroundImage: 'url("/banner5.jpg")',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
@@ -56,77 +56,79 @@ const Home = () => {
         }}
       />
 
-      {/* Rotating Banner Image Box */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
-        style={{
-          width: '90%',
-          maxWidth: '800px',
-          margin: '0 auto 30px',
-          height: '250px',
-          borderRadius: '15px',
-          overflow: 'hidden',
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-          backgroundColor: '#fff',
-        }}
-      >
-        <img
-          src={rotatingImages[currentImage]}
-          alt="Highlight"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block'
-          }}
-        />
-      </motion.div>
-
-     {/* Heading */}
-<motion.h1
-  initial={{ x: -50, opacity: 0 }}
-  animate={{ x: 0, opacity: 1 }}
-  transition={{ delay: 0.4, duration: 0.8 }}
-  style={{
-    fontSize: '2.8rem',
-    marginBottom: '24px',
-    color: '#ffffff',
-    textShadow: '1px 1px 3px rgba(0,0,0,0.6)',
-  }}
->
-  Welcome to the Digital Degree Issuance System
-</motion.h1>
-
-{/* Description */}
-<motion.p
+      {/* Center Container for Image Box */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '120px' }}>
+      {/* Rotating Banner Image Box at Top Left */}
+<motion.div
   initial={{ opacity: 0 }}
   animate={{ opacity: 1 }}
-  transition={{ delay: 0.6, duration: 1 }}
+  transition={{ delay: 0.3, duration: 0.8 }}
   style={{
-    fontSize: '1.2rem',
-    maxWidth: '900px',
-    margin: '0 auto 40px',
-    lineHeight: '1.7',
-    color: 'rgba(255, 255, 255, 0.9)',
-    textShadow: '1px 1px 3px rgba(0,0,0,0.4)',
+    position: 'fixed',
+    top: '80px',
+    left: '750px', // 👈 Changed from right to left
+    width: '450px',
+    height: '450px',
+    borderRadius: '20px',
+    overflow: 'hidden',
+    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+    backgroundColor: '#fff',
+    zIndex: 998, // Just below the logo if needed
   }}
 >
-  Experience a revolutionary way to manage academic records with blockchain technology. Our platform ensures
-  secure student registration, biometric attendance tracking, automated grading, and transparent degree issuance.
-  Join us in modernizing academic integrity and efficiency.
-</motion.p>
+  <img
+    src={rotatingImages[currentImage]}
+    alt="Highlight"
+    style={{
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      display: 'block',
+    }}
+  />
+</motion.div>
+      </div>
 
+      {/* Heading */}
+      <motion.h1
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.8 }}
+        style={{
+          fontSize: '2.8rem',
+          marginBottom: '24px',
+          color: '#ffffff',
+          textShadow: '1px 1px 3px rgba(0,0,0,0.6)',
+        }}
+      >
+        Welcome to the Digital Degree Issuance System
+      </motion.h1>
 
-     
-
-      
+      {/* Description */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 1 }}
+        style={{
+          fontSize: '1.2rem',
+          maxWidth: '900px',
+          margin: '0 auto 40px',
+          lineHeight: '1.7',
+          color: 'rgba(255, 255, 255, 0.9)',
+          textShadow: '1px 1px 3px rgba(0,0,0,0.4)',
+        }}
+      >
+        Experience a revolutionary way to manage academic records with blockchain technology. Our platform ensures
+        secure student registration, biometric attendance tracking, automated grading, and transparent degree issuance.
+        Join us in modernizing academic integrity and efficiency.
+      </motion.p>
     </motion.div>
   );
 };
 
-
-
-
 export default Home;
+
+
+
+
+

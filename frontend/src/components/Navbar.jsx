@@ -1,22 +1,35 @@
-// File: src/components/Navbar.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar = () => {
+  const [showDashboards, setShowDashboards] = useState(false);
+
   return (
     <nav className="navbar">
-      <h2 className="navbar-title">Digital Degree Issuance</h2>
+      <h2 className="navbar-title">DIGITAL DEGREE ISSUANCE</h2>
       <div className="navbar-links">
-        <Link to="/">Home</Link>
-        <Link to="/register/student">Student Dashboard</Link>
-        <Link to="/register/faculty">Faculty Dashboard</Link> {/* ✅ Go to registration first */}
-        <Link to="/register/admin">Admin Dashboard</Link>     {/* ✅ Go to registration first */}
-        <Link to="/hod/approvals">HOD Dashboards</Link>
+        <Link to="/">HOME</Link>
 
+        <div
+          onMouseEnter={() => setShowDashboards(true)}
+          onMouseLeave={() => setShowDashboards(false)}
+          style={{ position: 'relative' }}
+        >
+          <button className="dropdown-btn">DASHBOARDS ▼</button>
+          {showDashboards && (
+            <div className="dropdown-menu">
+              <Link to="/register/student">STUDENT</Link>
+              <Link to="/register/faculty">FACULTY</Link>
+              <Link to="/register/admin">ADMIN</Link>
+              <Link to="/hod/approvals">HOD</Link>
+            </div>
+          )}
+        </div>
+
+        <Link to="/verify-degree">VERIFY DEGREE</Link>
       </div>
     </nav>
   );
 };
-
-export default Navbar;
+export default Navbar; 

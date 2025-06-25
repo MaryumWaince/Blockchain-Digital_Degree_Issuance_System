@@ -1,5 +1,16 @@
-// File: backend/routes/attendanceRoutes.js
+const express = require('express');
+const router = express.Router();
+const attendanceController = require('../controllers/attendanceController');
 
+router.post('/fingerprint', attendanceController.storeFingerprint);
+router.post('/mark', attendanceController.markAttendanceByFingerprint);
+router.get('/course/:course', attendanceController.getAttendanceByCourse);
+router.get('/student/:did', attendanceController.getAttendanceByDID);
+
+module.exports = router;
+
+
+/*
 const express = require('express');
 const crypto = require('crypto');
 const Fingerprint = require('../models/Fingerprint');
@@ -85,3 +96,4 @@ router.get('/student/:did', async (req, res) => {
 });
 
 module.exports = router;
+*/

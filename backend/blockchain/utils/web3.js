@@ -1,8 +1,9 @@
 require('dotenv').config({ path: './blockchain/.env' });
 
 const Web3 = require('web3').default || require('web3');
+
 const contractABI = require('../build/contracts/DegreeSystem.json').abi;
-const contractAddress = '0x7A53E9b93C6A4C4c0a923F3BC3465A377FDB6AaF';
+const contractAddress = '0x5bcA86a69548F1095B0976DB1B3c3DF7A83CE91e';
 
 // Validate RPC URL
 const providerURL = process.env.SEPOLIA_RPC;
@@ -27,5 +28,5 @@ const contract = new web3.eth.Contract(contractABI, contractAddress);
 module.exports = {
   web3,
   contract,
-  account, // already includes address and private key
+  account,
 };

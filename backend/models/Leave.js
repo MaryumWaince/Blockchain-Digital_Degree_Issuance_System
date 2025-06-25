@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 const leaveSchema = new mongoose.Schema({
-  did: { type: String, required: true },
+  studentDID: { type: String, required: true },
   reason: { type: String, required: true },
   date: { type: Date, required: true },
   approved: { type: Boolean, default: false }

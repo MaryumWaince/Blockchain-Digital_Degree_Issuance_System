@@ -5,6 +5,51 @@
       "type": "constructor"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "studentDID",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "pdfCID",
+          "type": "string"
+        }
+      ],
+      "name": "DegreeIssued",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "studentDID",
+          "type": "string"
+        }
+      ],
+      "name": "DegreeRejected",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "vcSignature",
+          "type": "string"
+        }
+      ],
+      "name": "VCSignatureUpdated",
+      "type": "event"
+    },
+    {
       "inputs": [],
       "name": "admin",
       "outputs": [
@@ -12,20 +57,6 @@
           "internalType": "address",
           "name": "",
           "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [],
-      "name": "currentGovSignature",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -50,316 +81,11 @@
       "inputs": [
         {
           "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "name": "issuedDegrees",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "issued",
-          "type": "bool"
-        },
-        {
-          "internalType": "string",
-          "name": "pdfHash",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "issuedOn",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "vcSignature",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "govSignature",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "rejected",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "studentAttendance",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "courseId",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "status",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "timestamp",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "studentFees",
-      "outputs": [
-        {
-          "internalType": "uint8",
-          "name": "semester",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bool",
-          "name": "paid",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "studentGrades",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "courseId",
-          "type": "string"
-        },
-        {
-          "internalType": "uint16",
-          "name": "totalMarks",
-          "type": "uint16"
-        },
-        {
-          "internalType": "uint16",
-          "name": "obtainedMarks",
-          "type": "uint16"
-        },
-        {
-          "internalType": "uint8",
-          "name": "creditHours",
-          "type": "uint8"
-        },
-        {
-          "internalType": "string",
-          "name": "grade",
-          "type": "string"
-        },
-        {
-          "internalType": "uint8",
-          "name": "qualityPoints",
-          "type": "uint8"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "name": "students",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "encryptedData",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "exists",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "studentDID",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "encryptedData",
-          "type": "string"
-        }
-      ],
-      "name": "registerStudent",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "studentDID",
-          "type": "string"
-        },
-        {
-          "internalType": "uint8",
-          "name": "semester",
-          "type": "uint8"
-        }
-      ],
-      "name": "recordFee",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "studentDID",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "courseId",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "status",
-          "type": "string"
-        }
-      ],
-      "name": "markAttendance",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "studentDID",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "courseId",
-          "type": "string"
-        },
-        {
-          "internalType": "uint16",
-          "name": "totalMarks",
-          "type": "uint16"
-        },
-        {
-          "internalType": "uint16",
-          "name": "obtainedMarks",
-          "type": "uint16"
-        },
-        {
-          "internalType": "uint8",
-          "name": "creditHours",
-          "type": "uint8"
-        },
-        {
-          "internalType": "string",
-          "name": "grade",
-          "type": "string"
-        },
-        {
-          "internalType": "uint8",
-          "name": "qualityPoints",
-          "type": "uint8"
-        }
-      ],
-      "name": "submitGrade",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
           "name": "vc",
           "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "gov",
-          "type": "string"
         }
       ],
-      "name": "storeSignatures",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "studentDID",
-          "type": "string"
-        }
-      ],
-      "name": "rejectDegree",
+      "name": "storeVCSignature",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -373,7 +99,7 @@
         },
         {
           "internalType": "string",
-          "name": "pdfHash",
+          "name": "pdfCID",
           "type": "string"
         },
         {
@@ -393,14 +119,9 @@
           "internalType": "string",
           "name": "studentDID",
           "type": "string"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "degreeHash",
-          "type": "bytes32"
         }
       ],
-      "name": "storeDegreeHash",
+      "name": "rejectDegree",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -433,94 +154,8 @@
           "type": "string"
         }
       ],
-      "name": "getStudentStatus",
+      "name": "getDegreeInfo",
       "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        },
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        },
-        {
-          "components": [
-            {
-              "internalType": "uint8",
-              "name": "semester",
-              "type": "uint8"
-            },
-            {
-              "internalType": "bool",
-              "name": "paid",
-              "type": "bool"
-            }
-          ],
-          "internalType": "struct DegreeSystem.Fee[]",
-          "name": "",
-          "type": "tuple[]"
-        },
-        {
-          "components": [
-            {
-              "internalType": "string",
-              "name": "courseId",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "status",
-              "type": "string"
-            },
-            {
-              "internalType": "uint256",
-              "name": "timestamp",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct DegreeSystem.Attendance[]",
-          "name": "",
-          "type": "tuple[]"
-        },
-        {
-          "components": [
-            {
-              "internalType": "string",
-              "name": "courseId",
-              "type": "string"
-            },
-            {
-              "internalType": "uint16",
-              "name": "totalMarks",
-              "type": "uint16"
-            },
-            {
-              "internalType": "uint16",
-              "name": "obtainedMarks",
-              "type": "uint16"
-            },
-            {
-              "internalType": "uint8",
-              "name": "creditHours",
-              "type": "uint8"
-            },
-            {
-              "internalType": "string",
-              "name": "grade",
-              "type": "string"
-            },
-            {
-              "internalType": "uint8",
-              "name": "qualityPoints",
-              "type": "uint8"
-            }
-          ],
-          "internalType": "struct DegreeSystem.Grade[]",
-          "name": "",
-          "type": "tuple[]"
-        },
         {
           "components": [
             {
@@ -544,23 +179,18 @@
               "type": "string"
             },
             {
-              "internalType": "string",
-              "name": "govSignature",
-              "type": "string"
-            },
-            {
               "internalType": "bool",
               "name": "rejected",
               "type": "bool"
             }
           ],
           "internalType": "struct DegreeSystem.Degree",
-          "name": "",
+          "name": "degree",
           "type": "tuple"
         },
         {
           "internalType": "bytes32",
-          "name": "",
+          "name": "degreeHash",
           "type": "bytes32"
         }
       ],

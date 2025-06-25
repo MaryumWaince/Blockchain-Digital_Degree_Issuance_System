@@ -1,82 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
 const Degree = require('../models/Degree');
-const { web3, contract, account } = require('../blockchain/utils/web3');
 
-
-// Helper to compute hash of file
-function computeFileHash(filePath) {
-  const fileBuffer = fs.readFileSync(filePath);
-  // Using keccak256 as used by web3.utils.sha3
-  return web3.utils.keccak256(fileBuffer);
-}
-
-// Store degree hash on blockchain
-const storeDegreeHashOnBlockchain = async (req, res) => {
-  try {
-    const { studentDID } = req.body;
-
-    if (!studentDID) {
-      return res.status(400).json({ message: 'studentDID is required' });
-    }
-
-    
-    const pdfPath = path.resolve(__dirname, `../degree_pdfs/${studentDID}.pdf`);
-
-    if (!fs.existsSync(pdfPath)) {
-      return res.status(404).json({ message: 'Degree PDF not found for this student' });
-    }
-
-    const degreeHash = computeFileHash(pdfPath);
-    const txData = contract.methods.storeDegreeHash(studentDID, degreeHash).encodeABI();
-    const txCount = await web3.eth.getTransactionCount(account.address, 'pending');
-
-   
-    const feeData = await web3.eth.getGasPrice(); // fallback for legacy gasPrice
-
-const tx = {
-  from: account.address,
-  to: contract.options.address,
-  nonce: txCount,
-  gas: 200000,
-  maxPriorityFeePerGas: web3.utils.toWei('2', 'gwei'),  // or a value suitable for Sepolia
-  maxFeePerGas: web3.utils.toWei('30', 'gwei'),         // total max fee per gas
-  data: txData,
-};
-
-
-    const signedTx = await web3.eth.accounts.signTransaction(tx, account.privateKey);
-    
-    // After transaction is sent successfully
-    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    console.log('Transaction receipt:', receipt);
-
-
-// ✅ Update Degree record in MongoDB
-await Degree.updateOne(
-  { studentDID },
-  {
-    blockchainHash: degreeHash,
-    blockchainTx: receipt.transactionHash,
-    isHashStored: true,
-  }
-);
-
-    return res.json({
-      message: 'Degree hash stored on blockchain successfully',
-      transactionHash: receipt.transactionHash,
-    });
-  } catch (err) {
-    console.error('Error storing degree hash on blockchain:', err);
-    return res.status(500).json({
-      message: 'Failed to store degree hash on blockchain',
-      error: err.message,
-    });
-  }
-};
-
-// Existing function to get degree
+// Get degree by studentDID
 const getDegree = async (req, res) => {
   try {
     const { studentDID } = req.params;
@@ -93,7 +17,7 @@ const getDegree = async (req, res) => {
   }
 };
 
-module.exports = { getDegree, storeDegreeHashOnBlockchain };
+module.exports = { getDegree };
 
 
 /*

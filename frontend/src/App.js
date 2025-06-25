@@ -25,6 +25,9 @@ import LeaveRequestsPage from './pages/LeaveRequestsPage';
 import SignaturePage from './pages/SignaturePage';
 import DegreeUploader from './components/DegreeUploader';
 
+import VerifyDegree from './components/VerifyDegree';
+
+
 // Wrapper to extract studentDID from route param
 const DegreeCertificateWrapper = () => {
   const { studentDID } = useParams();
@@ -62,6 +65,9 @@ function App() {
             element={<GradesPage studentDID={localStorage.getItem('studentDID')} />}
           />
           <Route path="/upload-degree" element={<DegreeUploader />} />
+
+          <Route path="/verify-degree" element={<VerifyDegree />} />
+
         </Routes>
       </div>
     </>

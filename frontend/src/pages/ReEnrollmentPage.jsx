@@ -41,27 +41,7 @@ const ReEnrollmentPage = () => {
         <ReEnrollmentForm />
       </section>
 
-      <section className="reenroll-section">
-        <h2>📄 Previous Requests</h2>
-        {reenrollments.length > 0 ? (
-          <ul className="reenroll-list">
-            {reenrollments.map(req => (
-              <li key={req._id} className="reenroll-item">
-                <strong>Semester:</strong> {req.semester} &mdash;
-                <strong> Courses:</strong> {req.courses.map(c => c.courseName).join(', ')} &mdash;
-                <strong> Status:</strong>{' '}
-                {req.status === 'Approved'
-                  ? '✅ Approved'
-                  : req.status === 'Rejected'
-                  ? '❌ Rejected'
-                  : '⏳ Pending'}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="no-requests">No re-enrollment requests found.</p>
-        )}
-      </section>
+      
     </div>
   );
 };

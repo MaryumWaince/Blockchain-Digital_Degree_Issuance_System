@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import DegreeCertificate from './DegreeCertificate';
-// Removed: import CertificateDownload from './CertificateDownload';
 import '../styles/StudentDashboard.css';
 
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState(null);
   const [degreeStatus, setDegreeStatus] = useState(null);
+  const [degreeHash, setDegreeHash] = useState('');
   const [showDegree, setShowDegree] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
   const [applying, setApplying] = useState(false);
+  const [notificationDegree, setNotificationDegree] = useState(null);
 
   const studentDID = JSON.parse(localStorage.getItem('user'))?.did;
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
@@ -28,11 +29,28 @@ const StudentDashboard = () => {
 
       if (degreeData && degreeData.status === 'Issued') {
         setDegreeStatus(prev => ({ ...prev, ...degreeData }));
+        if (degreeData.notification) {
+          setNotificationDegree(degreeData);
+        }
+
+        const hashRes = await axios.get(`${backendUrl}/api/degree/hash/${studentDID}`);
+        if (hashRes.data && hashRes.data.hash) {
+          setDegreeHash(hashRes.data.hash);
+        }
       }
     } catch (err) {
-      console.error('Error fetching degree status:', err);
+      console.error('Error fetching degree status/hash:', err);
       setDegreeStatus(null);
     }
+  };
+
+  const handleDownloadNotificationDegree = async () => {
+    window.open(`https://ipfs.io/ipfs/${notificationDegree.ipfsHash}`, '_blank');
+    await axios.post(`${backendUrl}/api/degree/notification/read`, {
+      studentDID: studentDID,
+    });
+    setNotificationDegree(null);
+    await fetchDegreeStatus();
   };
 
   useEffect(() => {
@@ -79,6 +97,23 @@ const StudentDashboard = () => {
     <div className="student-dashboard">
       <h1 className="dashboard-heading">🎓 Student Dashboard</h1>
 
+      {/* 🔔 Notification Box */}
+    {notificationDegree && (
+  <div className="bg-blue-100 border border-blue-300 text-blue-800 p-4 rounded mb-4">
+    🎉 <strong>Degree Issued:</strong> You can now download your official degree certificate.
+
+    <div className="mt-3 space-y-2">
+      <button
+        onClick={handleDownloadNotificationDegree}
+        className="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+      >
+        📥 Download Degree Notification (IPFS)
+      </button>
+    </div>
+  </div>
+)}
+
+
       {/* Personal Info */}
       <section className="section personal-info-container">
         <h2 className="centered-heading">👤 Personal Information</h2>
@@ -105,7 +140,7 @@ const StudentDashboard = () => {
       <section className="section"><h2><Link to={`/student/leaves?did=${studentDID}`} className="section-link">📝 Leave Requests ▶️</Link></h2></section>
       <section className="section"><h2><Link to={`/student/reenrollment`} className="section-link">🔄 Re-enrollment ▶️</Link></h2></section>
 
-      {/* Degree Issuance */}
+      {/* Degree Issuance Section */}
       <section className="section">
         <h2 className="centered-heading">🎓 Degree Issuance</h2>
 
@@ -127,8 +162,6 @@ const StudentDashboard = () => {
               </button>
             )}
 
-            {/* Removed CertificateDownload component here */}
-
             {(degreeStatus.status === 'Issued' || degreeStatus.status === 'Approved') && degreeStatus.pdfUrl && (
               <a
                 href={degreeStatus.pdfUrl.startsWith('http') ? degreeStatus.pdfUrl : `${backendUrl}${degreeStatus.pdfUrl}`}
@@ -147,6 +180,13 @@ const StudentDashboard = () => {
               >
                 📥 View / Download Degree PDF
               </a>
+            )}
+
+            {degreeHash && (
+              <p className="mt-2">
+                <strong>🔗 Degree Hash (IPFS/Blockchain):</strong><br />
+                <code className="text-xs break-all">{degreeHash}</code>
+              </p>
             )}
           </div>
         )}

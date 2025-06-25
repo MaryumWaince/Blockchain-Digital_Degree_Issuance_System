@@ -10,7 +10,7 @@ exports.submitRequest = async (req, res) => {
     }
 
     const formattedCourses = courses.map(course => ({
-      courseName: course.trim()
+      courseName: course.courseName.trim()
     }));
 
     const request = new ReEnrollment({
@@ -26,6 +26,7 @@ exports.submitRequest = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // HOD/Admin gets all re-enrollment requests
 exports.getAllRequests = async (req, res) => {

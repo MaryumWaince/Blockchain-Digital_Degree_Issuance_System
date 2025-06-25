@@ -50,22 +50,28 @@ const FacultyDashboard = () => {
   };
 
   const submitGrade = async () => {
-    const { studentDID, courseName, semester, marks } = gradeInput;
-    if (!studentDID || !courseName || !semester || !marks) return setGradeStatus('All fields required.');
+  const { studentDID, courseName, semester, marks } = gradeInput;
 
-    try {
-      const res = await axios.post(`${backendUrl}/api/grades/submit`, {
-        studentDID,
-        courseName,
-        semester: Number(semester),
-        obtainedMarks: Number(marks)
-      });
-      setGradeStatus(res.data.message || 'Grade submitted.');
-      setGradeInput({ studentDID: '', courseName: '', semester: '', marks: '' });
-    } catch (err) {
-      setGradeStatus('Error submitting grade.');
-    }
-  };
+  if (!studentDID || !courseName || !semester || !marks) {
+    return setGradeStatus('All fields required.');
+  }
+
+  try {
+    const res = await axios.post(`${backendUrl}/api/grades/submit`, {
+      studentDID,
+      courseName,
+      semester: Number(semester),
+      obtainedMarks: Number(marks)
+    });
+
+    setGradeStatus(res.data.message || 'Grade submitted.');
+    setGradeInput({ studentDID: '', courseName: '', semester: '', marks: '' });
+  } catch (err) {
+    console.error('Grade submission error:', err.response?.data || err.message || err);
+    setGradeStatus(err.response?.data?.message || 'Error submitting grade.');
+  }
+};
+
 
   const submitReEnrollGrade = async (studentDID, courseName, semester) => {
     const key = `${studentDID}_${courseName}`;

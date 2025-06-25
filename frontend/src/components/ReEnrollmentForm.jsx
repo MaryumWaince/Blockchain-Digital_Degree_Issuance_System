@@ -182,30 +182,30 @@ const ReEnrollmentForm = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [latest, setLatest] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const studentDID = localStorage.getItem('studentDID');
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+
+  const fetchLatestRequest = async () => {
+    try {
+      const res = await axios.get(`${backendUrl}/api/reenrollment/student/${studentDID}`);
+      const sorted = (res.data || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      if (sorted.length > 0) {
+        setLatest(sorted[0]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     if (!studentDID) {
       setError('Student DID not found. Please log in again.');
       return;
     }
-
-    const fetchLatestRequest = async () => {
-      try {
-        const res = await axios.get(`${backendUrl}/api/reenrollment/student/${studentDID}`);
-        const sorted = (res.data || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        if (sorted.length > 0) {
-          setLatest(sorted[0]);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
     fetchLatestRequest();
-  }, [studentDID, backendUrl]);
+  }, [studentDID]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -215,7 +215,14 @@ const ReEnrollmentForm = () => {
       return;
     }
 
+    const parsedSemester = parseInt(semester);
+    if (isNaN(parsedSemester) || parsedSemester <= 0) {
+      setError('Semester number must be a positive integer.');
+      return;
+    }
+
     try {
+      setLoading(true);
       const courseList = courses
         .split(',')
         .map((c) => c.trim())
@@ -224,7 +231,7 @@ const ReEnrollmentForm = () => {
 
       await axios.post(`${backendUrl}/api/reenrollment`, {
         studentDID,
-        semester: parseInt(semester),
+        semester: parsedSemester,
         reason,
         courses: courseList,
       });
@@ -234,10 +241,13 @@ const ReEnrollmentForm = () => {
       setCourses('');
       setReason('');
       setSemester('');
+      fetchLatestRequest(); // refresh latest
     } catch (err) {
       console.error(err);
       setError('❌ Error submitting re-enrollment request.');
       setMessage('');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -248,12 +258,31 @@ const ReEnrollmentForm = () => {
       </h2>
 
       {latest && (
-        <p className="text-sm text-gray-600 mb-6">
-          <strong>Last Submitted:</strong>{' '}
-          {latest.createdAt && !isNaN(Date.parse(latest.createdAt))
-            ? new Date(latest.createdAt).toLocaleDateString()
-            : 'Not Available'}
-        </p>
+        <div className="text-sm text-gray-600 mb-6 space-y-2 border border-gray-200 p-4 rounded-lg bg-gray-50">
+          <p>
+            <strong>Last Submitted:</strong>{' '}
+            {latest.createdAt && !isNaN(Date.parse(latest.createdAt))
+              ? new Date(latest.createdAt).toLocaleDateString()
+              : 'Not Available'}
+          </p>
+          <p>
+            <strong>Status:</strong>{' '}
+            <span
+              className={
+                latest.status === 'Rejected'
+                  ? 'text-red-600 font-bold'
+                  : latest.status === 'Approved'
+                  ? 'text-green-600 font-bold'
+                  : 'text-yellow-600 font-bold'
+              }
+            >
+              {latest.status || 'Pending'}
+            </span>
+          </p>
+          <p><strong>Semester:</strong> {latest.semester}</p>
+          <p><strong>Reason:</strong> {latest.reason}</p>
+          <p><strong>Courses:</strong> {latest.courses?.map((c) => c.courseName).join(', ')}</p>
+        </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -266,6 +295,7 @@ const ReEnrollmentForm = () => {
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="e.g., 4"
             required
+            min="1"
           />
         </div>
 
@@ -295,9 +325,12 @@ const ReEnrollmentForm = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition duration-300"
+          disabled={loading}
+          className={`w-full text-white py-3 rounded-lg text-lg font-medium transition duration-300 ${
+            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
-          Submit Request
+          {loading ? 'Submitting...' : 'Submit Request'}
         </button>
       </form>
 
